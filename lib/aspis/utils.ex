@@ -48,4 +48,17 @@ defmodule Aspis.Utils do
         |> Enum.flat_map(fn {name, spec} -> Aspis.HexPackage.maybe_new(name, spec) end)
     end
   end
+
+  def get_hex_info(package) when is_atom(package) do
+    get_hex_info(Atom.to_string(package))
+  end
+
+  def get_hex_info(package) when is_binary(package) do
+    # TODO dehardcode "hexpm"
+    # TODO error handling
+    {:ok, {200, data, _headers}} = Hex.API.Package.get("hexpm", package)
+    {:ok, data}
+  end
+
+
 end
