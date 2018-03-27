@@ -60,5 +60,28 @@ defmodule Aspis.Utils do
     {:ok, data}
   end
 
+  def get_github_git_url(package) do
+    {:ok, data} = get_hex_info(package)
+    links = get_in(data, ["meta", "links"])
 
+    github_regex = ~r|^https://github.com/[\w_-]+/[\w_-]+|
+
+    matching_urls =
+      links
+      |> Enum.filter(fn {name, url} ->
+        name_relevant = String.downcase(name) == "github"
+
+        url_relevant = Regex.match?(github_regex, url)
+        name_relevant && url_relevant
+      end)
+      |> Enum.map(fn {_, url} -> url end)
+      |> Enum.map(&Regex.run(github_regex, &1))
+      |> Enum.map(fn [match] -> match <> ".git" end)
+
+    case matching_urls do
+      [] -> {:error, :no_github_url_found}
+      [url] -> {:ok, url}
+      [_ | _] -> {:error, :multiple_github_urls_found}
+    end
+  end
 end
