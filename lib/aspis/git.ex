@@ -15,7 +15,7 @@ defmodule Aspis.Git do
          {:ok, ^git_url} <- {:ok, String.trim(remote_url)} do
       {:ok, git_url}
     else
-      {:error, {_, _}} ->
+      _ ->
         {:error, :invalid_remote_url}
     end
   end
@@ -24,9 +24,9 @@ defmodule Aspis.Git do
     if is_empty_directory(path) || is_repo_directory(path) do
       File.rm_rf(path)
       {:ok, :purged}
+    else
+      {:error, :not_a_repo_directory}
     end
-
-    {:error, :not_a_repo_directory}
   end
 
   def is_empty_directory(path) do
@@ -43,6 +43,32 @@ defmodule Aspis.Git do
     else
       _ ->
         false
+    end
+  end
+
+  def ensure_repo(git_url, path) do
+    with :ok <- File.mkdir_p(path) do
+      ensure_correct_repo_in_directory(git_url, path)
+    end
+  end
+
+  defp ensure_correct_repo_in_directory(git_url, path) do
+    case {is_empty_directory(path), is_repo_directory(path)} do
+      {true, _} ->
+        clone(git_url, path)
+
+      {false, true} ->
+        case verify_remote(git_url, path) do
+          res = {:ok, _} ->
+            res
+
+          {:error, :invalid_remote_url} ->
+            {:ok, _} = purge_repo(path)
+            clone(git_url, path)
+        end
+
+      {false, false} ->
+        {:error, :directory_occupied}
     end
   end
 
