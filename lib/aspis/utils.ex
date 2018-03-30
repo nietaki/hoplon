@@ -84,4 +84,27 @@ defmodule Aspis.Utils do
       [_ | _] -> {:error, :multiple_github_urls_found}
     end
   end
+
+  def cmd(command, args, cd_path \\ nil) when is_binary(command) and is_list(args) do
+    opts =
+      case cd_path do
+        nil -> []
+        cd_path -> [cd: cd_path]
+      end
+
+    System.cmd(command, args, opts)
+    |> cast_cmd_result()
+  end
+
+  # ===========================================================================
+  # Helper Functions
+  # ===========================================================================
+
+  defp cast_cmd_result({result_text, 0}) do
+    {:ok, result_text}
+  end
+
+  defp cast_cmd_result({result_text, status_code}) do
+    {:error, {result_text, status_code}}
+  end
 end

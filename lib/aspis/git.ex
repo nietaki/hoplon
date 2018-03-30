@@ -1,17 +1,18 @@
 defmodule Aspis.Git do
+  alias Aspis.Utils
+
   # ===========================================================================
   # API Functions
   # ===========================================================================
 
   def clone(git_url, path) do
-    System.cmd("git", ["clone", git_url, path])
-    |> cast_cmd_result()
+    Utils.cmd("git", ["clone", git_url, path])
   end
 
   def verify_remote(git_url, path) do
-    remote_result = System.cmd("git", ["remote", "get-url", "origin"], cd: path)
+    remote_result = arbitrary(["remote", "get-url", "origin"], path)
 
-    with {:ok, remote_url} <- cast_cmd_result(remote_result),
+    with {:ok, remote_url} <- remote_result,
          {:ok, ^git_url} <- {:ok, String.trim(remote_url)} do
       {:ok, git_url}
     else
@@ -73,8 +74,7 @@ defmodule Aspis.Git do
   end
 
   def arbitrary(args, cd_path) when is_list(args) and is_binary(cd_path) do
-    System.cmd("git", args, cd: cd_path)
-    |> cast_cmd_result()
+    Utils.cmd("git", args, cd_path)
   end
 
   def attempt_checkout(treeish, cd_path) when is_binary(treeish) do
@@ -85,17 +85,5 @@ defmodule Aspis.Git do
       {:error, _} ->
         {:error, {:invalid_ref, treeish}}
     end
-  end
-
-  # ===========================================================================
-  # Helper Functions
-  # ===========================================================================
-
-  defp cast_cmd_result({result_text, 0}) do
-    {:ok, result_text}
-  end
-
-  defp cast_cmd_result({result_text, status_code}) do
-    {:error, {result_text, status_code}}
   end
 end
