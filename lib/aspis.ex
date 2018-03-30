@@ -1,18 +1,22 @@
 defmodule Aspis do
-  @moduledoc """
-  Documentation for Aspis.
-  """
+  alias Aspis.Git
 
-  @doc """
-  Hello world.
+  def prepare_repo(git_url, path) do
+    with {:ok, _} <- Git.ensure_repo(git_url, path),
+         {:ok, _} <- Git.arbitrary(["checkout", "master"], path),
+         {:ok, _} <- Git.arbitrary(["pull", "origin", "master"], path),
+         {:ok, _} <- Git.arbitrary(["fetch", "--tags"], path) do
+      {:ok, :repo_prepared}
+    end
+  end
 
-  ## Examples
+  def checkout_version_by_tag(version, cd_path) do
+    case Git.attempt_checkout(version, cd_path) do
+      success = {:ok, _} ->
+        success
 
-      iex> Aspis.hello
-      :world
-
-  """
-  def hello do
-    :world
+      {:error, _} ->
+        Git.attempt_checkout("v" <> version, cd_path)
+    end
   end
 end

@@ -72,6 +72,21 @@ defmodule Aspis.Git do
     end
   end
 
+  def arbitrary(args, cd_path) when is_list(args) and is_binary(cd_path) do
+    System.cmd("git", args, cd: cd_path)
+    |> cast_cmd_result()
+  end
+
+  def attempt_checkout(treeish, cd_path) when is_binary(treeish) do
+    case arbitrary(["checkout", treeish], cd_path) do
+      {:ok, _} ->
+        {:ok, treeish}
+
+      {:error, _} ->
+        {:error, {:invalid_ref, treeish}}
+    end
+  end
+
   # ===========================================================================
   # Helper Functions
   # ===========================================================================
