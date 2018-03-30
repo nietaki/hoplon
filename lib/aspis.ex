@@ -1,5 +1,19 @@
 defmodule Aspis do
   alias Aspis.Git
+  alias Aspis.Utils
+
+  @program_dependencies ["git", "diff"]
+
+  def verify_dependencies() do
+    missing_programs =
+      @program_dependencies
+      |> Enum.reject(&Utils.program_exists?/1)
+
+    case missing_programs do
+      [] -> {:ok, :all_dependencies_present}
+      missing_programs -> {:error, {:missing_dependencies, missing_programs}}
+    end
+  end
 
   def prepare_repo(git_url, path) do
     with {:ok, _} <- Git.ensure_repo(git_url, path),

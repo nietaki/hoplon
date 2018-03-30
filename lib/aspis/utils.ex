@@ -96,6 +96,13 @@ defmodule Aspis.Utils do
     |> cast_cmd_result()
   end
 
+  def program_exists?(program_name) when is_binary(program_name) do
+    case cmd("which", [program_name]) do
+      {:ok, _} -> true
+      {:error, _} -> false
+    end
+  end
+
   # ===========================================================================
   # Helper Functions
   # ===========================================================================
