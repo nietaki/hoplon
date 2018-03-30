@@ -1,17 +1,18 @@
 defmodule Aspis do
+  alias Aspis.Diff
   alias Aspis.Git
   alias Aspis.Utils
 
   @program_dependencies ["git", "diff"]
 
-  def verify_dependencies() do
+  def check_required_programs() do
     missing_programs =
       @program_dependencies
       |> Enum.reject(&Utils.program_exists?/1)
 
     case missing_programs do
-      [] -> {:ok, :all_dependencies_present}
-      missing_programs -> {:error, {:missing_dependencies, missing_programs}}
+      [] -> {:ok, :all_required_programs_present}
+      missing_programs -> {:error, {:missing_required_programs, missing_programs}}
     end
   end
 
@@ -32,5 +33,29 @@ defmodule Aspis do
       {:error, _} ->
         Git.attempt_checkout("v" <> version, cd_path)
     end
+  end
+
+  def get_relevant_file_diffs(baseline_dir, dependency_dir) do
+    all_diffs = Diff.diff_files_in_directories(baseline_dir, dependency_dir)
+
+    all_diffs
+    |> Enum.reject(fn diff ->
+      case diff do
+        # extra stuff in the repo
+        {:only_in_left, _} ->
+          true
+
+        # things hex puts in
+        {:only_in_right, ".hex"} ->
+          true
+
+        {:only_in_right, ".fetch"} ->
+          true
+
+        # the rest is relevant
+        _ ->
+          false
+      end
+    end)
   end
 end
