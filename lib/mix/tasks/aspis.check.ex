@@ -26,6 +26,7 @@ defmodule Mix.Tasks.Aspis.Check do
         end)
         |> Map.new()
 
+      # TODO make this more robust, it will mess up if we can't fetch the github url from the description
       git_urls =
         git_urls
         |> Enum.map(fn {k, {:ok, v}} -> {k, v} end)

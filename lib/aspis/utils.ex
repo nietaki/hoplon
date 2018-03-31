@@ -88,14 +88,14 @@ defmodule Aspis.Utils do
     end
   end
 
-  def cmd(command, args, cd_path \\ nil) when is_binary(command) and is_list(args) do
-    opts =
+  def cmd(command, args, cd_path \\ nil, opts \\ []) when is_binary(command) and is_list(args) do
+    cmd_opts =
       case cd_path do
         nil -> []
         cd_path -> [cd: cd_path]
       end
 
-    System.cmd(command, args, opts)
+    System.cmd(command, args, opts ++ cmd_opts)
     |> cast_cmd_result()
   end
 

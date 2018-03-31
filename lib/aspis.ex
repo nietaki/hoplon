@@ -19,8 +19,8 @@ defmodule Aspis do
   def prepare_repo(git_url, path) do
     with {:ok, _} <- Git.ensure_repo(git_url, path),
          {:ok, _} <- Git.arbitrary(["checkout", "--quiet", "master"], path),
-         {:ok, _} <- Git.arbitrary(["pull", "origin", "master"], path),
-         {:ok, _} <- Git.arbitrary(["fetch", "--tags"], path) do
+         {:ok, _} <- Git.arbitrary(["pull", "--quiet", "origin", "master"], path),
+         {:ok, _} <- Git.arbitrary(["fetch", "--quiet", "--tags"], path) do
       {:ok, :repo_prepared}
     end
   end
