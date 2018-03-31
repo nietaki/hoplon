@@ -1,8 +1,8 @@
 [![travis badge](https://travis-ci.org/nietaki/aspis.svg?branch=master)](https://travis-ci.org/nietaki/aspis)
-<!--[![Coverage Status](https://coveralls.io/repos/github/nietaki/aspis/badge.svg?branch=master)](https://coveralls.io/github/nietaki/aspis?branch=master)-->
 [![Hex.pm](https://img.shields.io/hexpm/v/aspis.svg)](https://hex.pm/packages/aspis) 
 [![docs](https://img.shields.io/badge/docs-hexdocs-yellow.svg)](https://hexdocs.pm/aspis/) 
 [![Built with Spacemacs](https://cdn.rawgit.com/syl20bnr/spacemacs/442d025779da2f62fc86c2082703697714db6514/assets/spacemacs-badge.svg)](http://spacemacs.org)
+<!--[![Coverage Status](https://coveralls.io/repos/github/nietaki/aspis/badge.svg?branch=master)](https://coveralls.io/github/nietaki/aspis?branch=master)-->
 
 # Aspis
 
