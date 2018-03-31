@@ -36,7 +36,7 @@ defmodule Aspis.Utils do
     end
   end
 
-  def get_relevant_packages_from_mix_lock(mix_lock_path \\ get_mix_lock_path()) do
+  def get_packages_from_mix_lock(mix_lock_path \\ get_mix_lock_path()) do
     case File.regular?(mix_lock_path) do
       false ->
         []
@@ -44,8 +44,11 @@ defmodule Aspis.Utils do
       true ->
         {map, _} = Code.eval_file(mix_lock_path)
 
-        map
-        |> Enum.flat_map(fn {name, spec} -> Aspis.HexPackage.maybe_new(name, spec) end)
+        res =
+          map
+          |> Enum.flat_map(fn {name, spec} -> Aspis.HexPackage.maybe_new(name, spec) end)
+
+        {:ok, res}
     end
   end
 

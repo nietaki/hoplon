@@ -18,7 +18,7 @@ defmodule Aspis do
 
   def prepare_repo(git_url, path) do
     with {:ok, _} <- Git.ensure_repo(git_url, path),
-         {:ok, _} <- Git.arbitrary(["checkout", "master"], path),
+         {:ok, _} <- Git.arbitrary(["checkout", "--quiet", "master"], path),
          {:ok, _} <- Git.arbitrary(["pull", "origin", "master"], path),
          {:ok, _} <- Git.arbitrary(["fetch", "--tags"], path) do
       {:ok, :repo_prepared}
@@ -51,6 +51,16 @@ defmodule Aspis do
 
         {:only_in_right, ".fetch"} ->
           true
+
+        {:only_in_right, "hex_metadata.config"} ->
+          true
+
+        {:only_in_right, relative_path} ->
+          if Path.basename(relative_path) == ".DS_Store" do
+            true
+          else
+            false
+          end
 
         # the rest is relevant
         _ ->

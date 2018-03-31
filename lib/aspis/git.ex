@@ -78,7 +78,7 @@ defmodule Aspis.Git do
   end
 
   def attempt_checkout(treeish, cd_path) when is_binary(treeish) do
-    case arbitrary(["checkout", treeish], cd_path) do
+    case arbitrary(["checkout", "--quiet", treeish], cd_path) do
       {:ok, _} ->
         {:ok, treeish}
 
