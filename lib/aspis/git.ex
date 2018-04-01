@@ -6,7 +6,7 @@ defmodule Aspis.Git do
   # ===========================================================================
 
   def clone(git_url, path) do
-    Utils.cmd("git", ["clone", git_url, path])
+    Utils.cmd("git", ["clone", "--quiet", git_url, path])
   end
 
   def verify_remote(git_url, path) do
@@ -78,12 +78,23 @@ defmodule Aspis.Git do
   end
 
   def attempt_checkout(treeish, cd_path) when is_binary(treeish) do
-    case Utils.cmd("git", ["checkout", "--quiet", treeish], cd_path, [stderr_to_stdout: true]) do
+    case Utils.cmd("git", ["checkout", "--quiet", treeish], cd_path, stderr_to_stdout: true) do
       {:ok, _} ->
         {:ok, treeish}
 
       {:error, _} ->
         {:error, {:invalid_ref, treeish}}
+    end
+  end
+
+  # NOTE: this doesn't really validate the git url
+  def get_github_user_and_package_from_git_url(git_url) when is_binary(git_url) do
+    case Regex.run(~r{([\w_-]+)/([\w_-]+).git$}, git_url) do
+      [_whole, user, repo_name] ->
+        {:ok, {user, repo_name}}
+
+      _other ->
+        {:error, :could_not_parse_repo_url}
     end
   end
 end

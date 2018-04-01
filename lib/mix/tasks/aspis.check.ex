@@ -2,6 +2,7 @@ defmodule Mix.Tasks.Aspis.Check do
   use Mix.Task
 
   alias Aspis.Utils
+  alias Aspis.CheckResult
 
   @shortdoc "check project's dependencies for hidden code"
 
@@ -15,42 +16,52 @@ defmodule Mix.Tasks.Aspis.Check do
          {:ok, project_deps_path} <- Utils.get_project_deps_path() do
       deps_names = Enum.map(deps, &elem(&1, 0))
 
-      relevant_packages =
-        hex_packages_from_mix_lock
-        |> Enum.filter(fn package -> package.name in deps_names end)
+      # TODO figure out if all of those are necessarily used or packages get kept in mix_lock after they stop being used
+      relevant_packages = hex_packages_from_mix_lock
 
-      git_urls =
-        relevant_packages
-        |> Enum.map(fn package ->
-          {package.name, Utils.get_github_git_url(package.hex_name)}
-        end)
-        |> Map.new()
+      IO.puts(CheckResult.header_line())
 
-      # TODO make this more robust, it will mess up if we can't fetch the github url from the description
-      git_urls =
-        git_urls
-        |> Enum.map(fn {k, {:ok, v}} -> {k, v} end)
-        |> Map.new()
+      Stream.map(relevant_packages, fn package ->
+        repo_path = Path.join(@git_parent_directory, Atom.to_string(package.name))
+        dep_path = Path.join(project_deps_path, Atom.to_string(package.name))
 
-      Enum.each(relevant_packages, fn package ->
-        repo_path = IO.inspect(Path.join(@git_parent_directory, Atom.to_string(package.name)))
-        dep_path = IO.inspect(Path.join(project_deps_path, Atom.to_string(package.name)))
-        git_url = git_urls[package.name]
-        Aspis.prepare_repo(git_url, repo_path)
-
-        case Aspis.checkout_version_by_tag(package.version, repo_path) do
-          {:ok, _} ->
-            IO.inspect(Aspis.get_relevant_file_diffs(repo_path, dep_path))
-            IO.puts "#{package.name} PASSED!"
-          _ ->
-            IO.puts("COULD NOT CHECKOUT THE RIGHT VERSION")
+        with result = CheckResult.new(package),
+             {:ok, result} <- add_git_url(result),
+             {:ok, _} <- Aspis.prepare_repo(result.git_url, repo_path),
+             {:ok, result} <- checkout_version(result, repo_path),
+             diffs = Aspis.get_relevant_file_diffs(repo_path, dep_path),
+             result = %CheckResult{result | diffs: diffs} do
+          result
+        else
+          {:error, result = %CheckResult{}} ->
+            result
         end
       end)
+      |> Stream.map(&CheckResult.representation_line/1)
+      |> Enum.each(&IO.puts/1)
     else
       {:error, reason} when is_atom(reason) ->
-        IO.puts "ERROR: #{reason}"
+        IO.puts("ERROR: #{reason}")
+    end
+  end
+
+  defp add_git_url(result) do
+    case Utils.get_github_git_url(result.hex_package.hex_name) do
+      {:ok, git_url} ->
+        {:ok, %CheckResult{result | git_url: git_url}}
+
       {:error, reason} ->
-        IO.puts "ERROR: #{inspect reason}"
+        {:error, CheckResult.set_error_reason(result, reason)}
+    end
+  end
+
+  defp checkout_version(result, repo_path) do
+    case Aspis.checkout_version_by_tag(result.hex_package.version, repo_path) do
+      {:ok, version_tag} ->
+        {:ok, %CheckResult{result | git_ref: {:tag, version_tag}}}
+
+      {:error, {:invalid_ref, _}} ->
+        {:error, CheckResult.set_error_reason(result, :could_not_find_git_tag)}
     end
   end
 end
