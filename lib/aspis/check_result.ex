@@ -45,6 +45,10 @@ defmodule Aspis.CheckResult do
     :corrupt
   end
 
+  def get_exit_code_from_status(:honest), do: 0
+  def get_exit_code_from_status(:unresolved), do: 11
+  def get_exit_code_from_status(:corrupt), do: 12
+
   def header_line() do
     "Dependency  Version  Github  LocatedBy  Status"
   end
