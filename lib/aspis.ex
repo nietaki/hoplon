@@ -2,6 +2,8 @@ defmodule Aspis do
   alias Aspis.Diff
   alias Aspis.Git
   alias Aspis.Utils
+  alias Aspis.HexPackage
+  alias Aspis.CheckResult
 
   @program_dependencies ["git", "diff"]
 
@@ -32,6 +34,44 @@ defmodule Aspis do
 
       {:error, _} ->
         Git.attempt_checkout("v" <> version, cd_path)
+    end
+  end
+
+  def check_package(package = %HexPackage{}, git_parent_directory) do
+    {:ok, project_deps_path} = Utils.get_project_deps_path()
+    repo_path = Path.join(git_parent_directory, Atom.to_string(package.name))
+    dep_path = Path.join(project_deps_path, Atom.to_string(package.name))
+
+    with result = CheckResult.new(package),
+         {:ok, result} <- add_git_url(result),
+         {:ok, _} <- Aspis.prepare_repo(result.git_url, repo_path),
+         {:ok, result} <- checkout_version(result, repo_path),
+         diffs = Aspis.get_relevant_file_diffs(repo_path, dep_path),
+         result = %CheckResult{result | diffs: diffs} do
+      result
+    else
+      {:error, result = %CheckResult{}} ->
+        result
+    end
+  end
+
+  defp add_git_url(result) do
+    case Utils.get_github_git_url(result.hex_package.hex_name) do
+      {:ok, git_url} ->
+        {:ok, %CheckResult{result | git_url: git_url}}
+
+      {:error, reason} ->
+        {:error, CheckResult.set_error_reason(result, reason)}
+    end
+  end
+
+  defp checkout_version(result, repo_path) do
+    case Aspis.checkout_version_by_tag(result.hex_package.version, repo_path) do
+      {:ok, version_tag} ->
+        {:ok, %CheckResult{result | git_ref: {:tag, version_tag}}}
+
+      {:error, {:invalid_ref, _}} ->
+        {:error, CheckResult.set_error_reason(result, :could_not_find_git_tag)}
     end
   end
 
