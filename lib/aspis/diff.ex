@@ -1,5 +1,4 @@
 defmodule Aspis.Diff do
-  alias Aspis.Utils
 
   @type file_difference ::
           {:only_in_left, relative_path :: String.t()}
@@ -8,20 +7,17 @@ defmodule Aspis.Diff do
 
   def diff_files_in_directories(left, right) do
     # TODO the LC_ALL trick https://stackoverflow.com/a/11325364/246337
-    {_differs?, output} =
-      case Utils.cmd("diff", ["-rq", left, right]) do
-        {:ok, output} ->
-          {false, output}
-
-        {:error, {output, _exit_code}} ->
-          {true, output}
-      end
+    {output, _status_code} = System.cmd("diff", ["-rq", left, right])
 
     output
     |> String.split(~r/(\r\n\|\r|\n)/)
     |> Enum.map(&String.trim/1)
     |> Enum.reject(&(&1 == ""))
     |> Enum.map(&extract_file_difference(&1, left, right))
+  end
+
+  def diff_dirs_raw(left, right) do
+    System.cmd("diff", ["-r", left, right])
   end
 
   # EXAMPLES:

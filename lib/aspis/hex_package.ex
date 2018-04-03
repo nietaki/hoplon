@@ -13,6 +13,11 @@ defmodule Aspis.HexPackage do
     }
   end
 
+  @spec has_name?(%__MODULE__{}, String.t | atom) :: boolean
+  def has_name?(package = %__MODULE__{}, name) do
+    "#{name}" in ["#{package.name}", "#{package.hex_name}"]
+  end
+
   def maybe_new(name, spec = {:hex, _hex_name, _version, _hash, [:mix], _deps, "hexpm"}) do
     [new(name, spec)]
   end

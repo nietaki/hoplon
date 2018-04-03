@@ -33,21 +33,11 @@ defmodule Mix.Tasks.Aspis.Check do
         |> Enum.map(&CheckResult.get_exit_code_from_status/1)
         |> Enum.reduce(&max/2)
 
-      task_exit(combined_exit_code)
+      Utils.task_exit(combined_exit_code)
     else
       {:error, reason} when is_atom(reason) ->
-        task_exit(1, inspect(reason))
+        Utils.task_exit(1, inspect(reason))
     end
   end
 
-  def task_exit(exit_code, message \\ nil) when is_integer(exit_code) do
-    case {exit_code, message} do
-      {_, nil} -> :ok
-      {_, ""} -> :ok
-      {0, msg} when is_binary(msg) -> IO.puts("OK: " <> msg)
-      {_, msg} when is_binary(msg) -> IO.puts("ERROR: " <> msg)
-    end
-
-    exit({:shutdown, exit_code})
-  end
 end

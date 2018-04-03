@@ -106,6 +106,17 @@ defmodule Aspis.Utils do
     end
   end
 
+  def task_exit(exit_code, message \\ nil) when is_integer(exit_code) do
+    case {exit_code, message} do
+      {_, nil} -> :ok
+      {_, ""} -> :ok
+      {0, msg} when is_binary(msg) -> IO.puts("OK: " <> msg)
+      {_, msg} when is_binary(msg) -> IO.puts("ERROR: " <> msg)
+    end
+
+    exit({:shutdown, exit_code})
+  end
+
   # ===========================================================================
   # Helper Functions
   # ===========================================================================
