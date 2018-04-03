@@ -6,22 +6,48 @@
 
 # Aspis
 
-**TODO: Add description**
+Aspis is a package that helps you verify if the code in your project's dependencies
+contains just what it has on GitHub and no other malicious code.
+
+**NOTE**: Aspis is still in early stage of development and might not be fully functional yet.
+
+## Usage
+
+To use Aspis, add it as a dependency in your project.
+
+Once it's in your deps, you can run `$ mix aspis.check` to see if any of
+the dependencies pulled into your project contain code that differs from 
+the code on their GitHub.
+
+To see the diff for a specific package, run `$ mix aspis.diff <package name>`.
+
+Both of these mix tasks will exit with a non-zero code if any problems are
+found - the dependencies differ from their github repository, the github
+repository itself could not be found or the right commit could not be
+identified by Aspis.
 
 ## Installation
 
-If [available in Hex](https://hex.pm/docs/publish), the package can be installed
-by adding `aspis` to your list of dependencies in `mix.exs`:
+The package can be installed by adding `aspis` to your list of 
+dependencies in `mix.exs`:
 
 ```elixir
 def deps do
   [
-    {:aspis, "~> 0.1.0"}
+    {:aspis, ">= 0.1.0", app: false, runtime: false, optional: true}
   ]
 end
 ```
 
-Documentation can be generated with [ExDoc](https://github.com/elixir-lang/ex_doc)
-and published on [HexDocs](https://hexdocs.pm). Once published, the docs can
-be found at [https://hexdocs.pm/aspis](https://hexdocs.pm/aspis).
+In order for Aspis to work correctly, you'll need `git` and `diff` programs in
+your `PATH`. 
 
+## FAQ
+
+### How do I know Aspis is not malicious itself?
+
+TODO (deps options and maybe other ways)
+
+### How does it work?
+
+TODO (conventions, heuristics, `git` and `diff`)
