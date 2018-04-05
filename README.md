@@ -6,10 +6,10 @@
 
 # Aspis
 
-Aspis is a package that helps you verify if the code in your project's dependencies
-contains just what it has on GitHub and no other malicious code.
+Aspis is a package that helps you verify that the code in your project's dependencies
+contains exactly what's on their GitHub and no other malicious code.
 
-**NOTE**: Aspis is still in early stage of development and might not be fully functional yet.
+**NOTE**: Aspis is still in early stage of development and might be missing some features.
 
 ## Usage
 
