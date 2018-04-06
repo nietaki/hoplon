@@ -19,8 +19,13 @@ defmodule Mix.Tasks.Aspis.Check do
       IO.puts(CheckResult.header_line())
 
       results =
-        Stream.map(relevant_packages, fn package ->
-          Aspis.check_package(package, @git_parent_directory)
+        Enum.map(relevant_packages, fn package ->
+          Task.async(fn ->
+            Aspis.check_package(package, @git_parent_directory)
+          end)
+        end)
+        |> Stream.map(fn task ->
+          Task.await(task)
         end)
         |> Stream.each(fn r ->
           r |> CheckResult.representation_line() |> IO.puts()
@@ -39,5 +44,4 @@ defmodule Mix.Tasks.Aspis.Check do
         Utils.task_exit(1, inspect(reason))
     end
   end
-
 end
