@@ -11,7 +11,6 @@ defmodule Mix.Tasks.Aspis.Diff do
   # TODO dehardcode this
   @git_parent_directory "/tmp/aspis_repos"
 
-
   def run([package_name]) do
     with {:ok, _} <- Aspis.check_required_programs(),
          {:ok, hex_packages} <- Utils.get_packages_from_mix_lock(),
@@ -39,17 +38,17 @@ defmodule Mix.Tasks.Aspis.Diff do
     end
   end
 
-
   def run(_) do
     Utils.task_exit(1, "run mix aspis.check with the name of the package as the argument")
   end
-
 
   def choose_hex_package(hex_packages, name) do
     case Enum.find(hex_packages, &HexPackage.has_name?(&1, name)) do
       nil ->
         {:error, :hex_package_not_found_in_dependencies}
-      package -> {:ok, package}
+
+      package ->
+        {:ok, package}
     end
   end
 end
