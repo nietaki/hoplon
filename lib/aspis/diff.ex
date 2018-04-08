@@ -15,8 +15,12 @@ defmodule Aspis.Diff do
     |> Enum.map(&extract_file_difference(&1, left, right))
   end
 
-  def diff_dirs_raw(left, right) do
-    System.cmd("diff", ["-r", left, right])
+  def diff_dirs_raw(left, right, args \\ []) do
+    args = case args do
+      [] -> ["-r"]
+      [_ | _] -> args
+    end
+    System.cmd("diff", args ++ [left, right])
   end
 
   # EXAMPLES:

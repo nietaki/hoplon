@@ -8,10 +8,31 @@ defmodule Mix.Tasks.Aspis.Diff do
 
   @shortdoc "show differences between pulled package dependency and its github code"
 
+  @moduledoc """
+  Prints out the diff between the repository code and the hex package code
+  for a given dependency.
+
+      $ mix aspis.diff <package_name>
+
+  is equivalent to
+
+      $ diff -r <package_code_directory> ./deps/<package_name>
+
+  You can provide custom options to `mix aspis.diff` - just add them after the package name.
+  For example
+
+      $ mix aspis.diff ecto -ruN -x .git
+
+  would translate to
+
+      $ diff -ruN -x .git <ecto_repo_dir> ./deps/ecto
+
+  """
+
   # TODO dehardcode this
   @git_parent_directory "/tmp/aspis_repos"
 
-  def run([package_name]) do
+  def run([package_name | additional_args]) do
     with {:ok, _} <- Aspis.check_required_programs(),
          {:ok, hex_packages} <- Utils.get_packages_from_mix_lock(),
          {:ok, package} <- choose_hex_package(hex_packages, package_name),
@@ -28,7 +49,7 @@ defmodule Mix.Tasks.Aspis.Diff do
           Utils.task_exit(11, "could not find package's git ref")
 
         %CheckResult{} ->
-          {output, exit_code} = Diff.diff_dirs_raw(repo_path, dep_path)
+          {output, exit_code} = Diff.diff_dirs_raw(repo_path, dep_path, additional_args)
           IO.write(output)
           Utils.task_exit(exit_code)
       end
