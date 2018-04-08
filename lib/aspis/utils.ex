@@ -1,4 +1,7 @@
 defmodule Aspis.Utils do
+
+  @moduledoc false
+
   def get_project() do
     case Mix.Project.get() do
       nil ->

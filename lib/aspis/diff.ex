@@ -1,4 +1,7 @@
 defmodule Aspis.Diff do
+
+  @moduledoc false
+
   @type file_difference ::
           {:only_in_left, relative_path :: String.t()}
           | {:only_in_right, relative_path :: String.t()}

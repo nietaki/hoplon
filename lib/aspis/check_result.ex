@@ -2,6 +2,8 @@ defmodule Aspis.CheckResult do
   alias Aspis.HexPackage
   alias Aspis.Git
 
+  @moduledoc false
+
   @type t :: %__MODULE__{}
 
   @type status :: :honest | :corrupt | :unresolved

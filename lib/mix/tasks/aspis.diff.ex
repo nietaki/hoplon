@@ -6,7 +6,7 @@ defmodule Mix.Tasks.Aspis.Diff do
   alias Aspis.HexPackage
   alias Aspis.Utils
 
-  @shortdoc "show differences between pulled package dependency and its github code"
+  @shortdoc "Shows differences between pulled package dependency and its github code"
 
   @moduledoc """
   Prints out the diff between the repository code and the hex package code
@@ -27,6 +27,8 @@ defmodule Mix.Tasks.Aspis.Diff do
 
       $ diff -ruN -x .git <ecto_repo_dir> ./deps/ecto
 
+  The task will forward the exit code of the `diff` call, which means if the directories
+  do differ, the task will exit with a non-zero code.
   """
 
   # TODO dehardcode this
@@ -63,7 +65,7 @@ defmodule Mix.Tasks.Aspis.Diff do
     Utils.task_exit(1, "run mix aspis.check with the name of the package as the argument")
   end
 
-  def choose_hex_package(hex_packages, name) do
+  defp choose_hex_package(hex_packages, name) do
     case Enum.find(hex_packages, &HexPackage.has_name?(&1, name)) do
       nil ->
         {:error, :hex_package_not_found_in_dependencies}

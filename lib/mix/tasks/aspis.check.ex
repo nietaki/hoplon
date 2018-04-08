@@ -4,7 +4,25 @@ defmodule Mix.Tasks.Aspis.Check do
   alias Aspis.Utils
   alias Aspis.CheckResult
 
-  @shortdoc "check project's dependencies for hidden code"
+  @shortdoc "Checks project's dependencies for hidden code"
+
+  @moduledoc """
+  Checks the project's dependencies for hidden code.
+
+  Running this task will go through the project's dependencies, resolve
+  where they're located on GitHub, clone each of their repos, check out
+  the commit corresponding to the package version and screen the packages
+  for any code differing from what is in the git repository.
+
+  The idea is that while the GitHub repositories are constantly screened
+  by the BEAM community, the published packages are rarely examined and
+  it takes just one malicious maintainer to do a lot of damage.
+
+  Running `$ mix aspis.check` lets you screen for this form of attack.
+
+  If `aspis` finds suspicious differences in the code or fails to resolve
+  the repository, the task will exit with a non-zero code.
+  """
 
   # TODO dehardcode this
   @git_parent_directory "/tmp/aspis_repos"

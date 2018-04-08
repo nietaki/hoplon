@@ -1,4 +1,7 @@
 defmodule Aspis.HexPackage do
+
+  @moduledoc false
+
   defstruct [
     :name,
     :hex_name,

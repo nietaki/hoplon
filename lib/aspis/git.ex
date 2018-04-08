@@ -1,4 +1,7 @@
 defmodule Aspis.Git do
+
+  @moduledoc false
+
   alias Aspis.Utils
 
   # ===========================================================================
