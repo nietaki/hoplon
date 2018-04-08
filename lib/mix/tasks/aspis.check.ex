@@ -27,6 +27,7 @@ defmodule Mix.Tasks.Aspis.Check do
   # TODO dehardcode this
   @git_parent_directory "/tmp/aspis_repos"
 
+  @doc "Runs the task"
   def run(_args) do
     with {:ok, _} <- Aspis.check_required_programs(),
          {:ok, hex_packages_from_mix_lock} <- Utils.get_packages_from_mix_lock(),

@@ -34,6 +34,7 @@ defmodule Mix.Tasks.Aspis.Diff do
   # TODO dehardcode this
   @git_parent_directory "/tmp/aspis_repos"
 
+  @doc "Runs the task"
   def run([package_name | additional_args]) do
     with {:ok, _} <- Aspis.check_required_programs(),
          {:ok, hex_packages} <- Utils.get_packages_from_mix_lock(),
