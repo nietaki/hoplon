@@ -1,6 +1,8 @@
 defmodule Aspis.Utils do
   @moduledoc false
 
+  @github_regex ~r|^https://github.com/[\w_-]+/[\w_-]+|
+
   def get_project() do
     case Mix.Project.get() do
       nil ->
@@ -44,7 +46,7 @@ defmodule Aspis.Utils do
     end
   end
 
-  def get_packages_from_mix_lock(mix_lock_path \\ get_mix_lock_path()) do
+  def get_packages_from_mix_lock() do
     with {:ok, mix_lock_path} <- get_mix_lock_path() do
       case File.regular?(mix_lock_path) do
         false ->
@@ -77,18 +79,11 @@ defmodule Aspis.Utils do
     {:ok, data} = get_hex_info(package)
     links = get_in(data, ["meta", "links"])
 
-    github_regex = ~r|^https://github.com/[\w_-]+/[\w_-]+|
-
     matching_urls =
       links
-      |> Enum.filter(fn {name, url} ->
-        name_relevant = String.downcase(name) == "github"
-
-        url_relevant = Regex.match?(github_regex, url)
-        name_relevant && url_relevant
-      end)
+      |> Enum.filter(&is_github_link?/1)
       |> Enum.map(fn {_, url} -> url end)
-      |> Enum.map(&Regex.run(github_regex, &1))
+      |> Enum.map(&Regex.run(@github_regex, &1))
       |> Enum.map(fn [match] -> match <> ".git" end)
 
     case matching_urls do
@@ -96,6 +91,13 @@ defmodule Aspis.Utils do
       [url] -> {:ok, url}
       [_ | _] -> {:error, :multiple_github_urls_found}
     end
+  end
+
+  def is_github_link?({name, url}) do
+    name_relevant = String.downcase(name) == "github"
+
+    url_relevant = Regex.match?(@github_regex, url)
+    name_relevant && url_relevant
   end
 
   def cmd(command, args, cd_path \\ nil, opts \\ []) when is_binary(command) and is_list(args) do
