@@ -1,5 +1,4 @@
 defmodule Aspis.Diff do
-
   @moduledoc false
 
   @type file_difference ::
@@ -19,10 +18,12 @@ defmodule Aspis.Diff do
   end
 
   def diff_dirs_raw(left, right, args \\ []) do
-    args = case args do
-      [] -> ["-r"]
-      [_ | _] -> args
-    end
+    args =
+      case args do
+        [] -> ["-r"]
+        [_ | _] -> args
+      end
+
     System.cmd("diff", args ++ [left, right])
   end
 

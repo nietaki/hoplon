@@ -1,5 +1,4 @@
 defmodule Aspis.Utils do
-
   @moduledoc false
 
   def get_project() do

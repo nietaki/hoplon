@@ -1,5 +1,4 @@
 defmodule Aspis do
-
   @moduledoc false
 
   alias Aspis.Diff

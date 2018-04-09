@@ -1,5 +1,4 @@
 defmodule Aspis.HexPackage do
-
   @moduledoc false
 
   defstruct [
