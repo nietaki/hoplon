@@ -7,9 +7,12 @@ defmodule Mix.Tasks.Aspis.ReleaseChecklist do
   @shortdoc "Prints a checklist for releasing aspis-compatible packages and its completion status"
 
   @moduledoc """
+  Prints a checklist for releasing aspis-compatible packages and its completion status
   """
 
   defmodule ChecklistItem do
+    @moduledoc false
+
     defstruct [
       :checked?,
       :description,
@@ -86,6 +89,7 @@ defmodule Mix.Tasks.Aspis.ReleaseChecklist do
     end
   end
 
+  @doc false
   def package_links_valid?(nil) do
     false
   end
@@ -94,6 +98,7 @@ defmodule Mix.Tasks.Aspis.ReleaseChecklist do
     Enum.any?(links, &Utils.is_github_link?/1)
   end
 
+  @doc false
   def source_url_valid?(nil) do
     false
   end
@@ -102,6 +107,7 @@ defmodule Mix.Tasks.Aspis.ReleaseChecklist do
     Utils.is_github_link?({"github", source_url})
   end
 
+  @doc false
   def tags_valid?(tags, version) do
     valid_version_tags = [version, "v" <> version]
     Enum.any?(tags, fn tag -> tag in valid_version_tags end)
