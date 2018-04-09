@@ -32,26 +32,34 @@ defmodule Aspis.Utils do
         {:error, :mix_exs_not_found}
 
       [mix_exs_path] ->
-        String.replace_suffix(mix_exs_path, "mix.exs", "mix.lock")
+        {:ok, String.replace_suffix(mix_exs_path, "mix.exs", "mix.lock")}
 
       [_ | _] ->
         {:error, :too_many_mix_exs_files_found}
     end
   end
 
+  def get_project_root_directory() do
+    with {:ok, mix_lock_path} <- get_mix_lock_path() do
+      {:ok, Path.dirname(mix_lock_path)}
+    end
+  end
+
   def get_packages_from_mix_lock(mix_lock_path \\ get_mix_lock_path()) do
-    case File.regular?(mix_lock_path) do
-      false ->
-        []
+    with {:ok, mix_lock_path} <- get_mix_lock_path() do
+      case File.regular?(mix_lock_path) do
+        false ->
+          []
 
-      true ->
-        {map, _} = Code.eval_file(mix_lock_path)
+        true ->
+          {map, _} = Code.eval_file(mix_lock_path)
 
-        res =
-          map
-          |> Enum.flat_map(fn {name, spec} -> Aspis.HexPackage.maybe_new(name, spec) end)
+          res =
+            map
+            |> Enum.flat_map(fn {name, spec} -> Aspis.HexPackage.maybe_new(name, spec) end)
 
-        {:ok, res}
+          {:ok, res}
+      end
     end
   end
 

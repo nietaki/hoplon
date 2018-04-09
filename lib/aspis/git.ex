@@ -76,6 +76,35 @@ defmodule Aspis.Git do
     end
   end
 
+  def get_head_tags(cd_path) do
+    with {:ok, head_sha} <- arbitrary(["rev-parse", "HEAD"], cd_path),
+         head_sha = String.trim(head_sha),
+         {:ok, tag_tuples} <- get_tags(cd_path) do
+      head_tags = tag_tuples
+      |> Enum.filter(fn {sha, _tag} -> sha == head_sha end)
+      |> Enum.map(fn {_sha, tag} -> tag end)
+
+      {:ok, head_tags}
+    end
+  end
+
+
+  def get_tags(cd_path) do
+    res = case arbitrary(["show-ref", "--tags"], cd_path) do
+      {:ok, str} -> {:ok, str}
+      {:error, {"", _}} -> {:ok, ""}
+      other -> other
+    end
+
+    with {:ok, lines_string} <- res do
+      res = lines_string
+      |> String.split(~r/(\r\n\|\r|\n)/, trim: true)
+      |> Enum.map(fn line -> String.split(line, " ", parts: 2) end)
+      |> Enum.map(fn [sha, tag] -> {sha, String.trim_leading(tag, "refs/tags/")} end)
+      {:ok, res}
+    end
+  end
+
   def arbitrary(args, cd_path) when is_list(args) and is_binary(cd_path) do
     Utils.cmd("git", args, cd_path)
   end
