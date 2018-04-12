@@ -45,7 +45,23 @@ defmodule Aspis.MixProject do
       links: %{
         "GitHub" => "https://github.com/nietaki/aspis"
       },
-      description: description()
+      description: description(),
+      files: default_files() ++ ["scripts"]
+    ]
+  end
+
+  defp default_files() do
+    [
+      "lib",
+      # "priv",
+      "mix.exs",
+      "README*",
+      # "readme*",
+      "LICENSE*",
+      # "license*",
+      # "CHANGELOG*",
+      # "changelog*",
+      # "src"
     ]
   end
 
