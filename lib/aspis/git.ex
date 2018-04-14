@@ -1,7 +1,7 @@
-defmodule Aspis.Git do
+defmodule Hoplon.Git do
   @moduledoc false
 
-  alias Aspis.Utils
+  alias Hoplon.Utils
 
   # ===========================================================================
   # API Functions

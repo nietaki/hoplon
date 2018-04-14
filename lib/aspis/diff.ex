@@ -1,6 +1,6 @@
-defmodule Aspis.Diff do
+defmodule Hoplon.Diff do
 
-  alias Aspis.Utils
+  alias Hoplon.Utils
 
   @moduledoc false
 
@@ -31,8 +31,8 @@ defmodule Aspis.Diff do
   end
 
   # EXAMPLES:
-  # "Only in /tmp/aspis/ecto/integration_test: mysql"
-  # "Files /foo/bar/something/deps/ecto/README.md and /tmp/aspis/ecto/README.md differ"
+  # "Only in /tmp/hoplon/ecto/integration_test: mysql"
+  # "Files /foo/bar/something/deps/ecto/README.md and /tmp/hoplon/ecto/README.md differ"
   defp extract_file_difference(line, left, right) do
     only_in_left_prefix = "Only in " <> left
     only_in_right_prefix = "Only in " <> right

@@ -1,4 +1,4 @@
-defmodule AspisTest do
+defmodule HoplonTest do
   use ExUnit.Case
-  doctest Aspis
+  doctest Hoplon
 end

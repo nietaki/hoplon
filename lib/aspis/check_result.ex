@@ -1,6 +1,6 @@
-defmodule Aspis.CheckResult do
-  alias Aspis.HexPackage
-  alias Aspis.Git
+defmodule Hoplon.CheckResult do
+  alias Hoplon.HexPackage
+  alias Hoplon.Git
 
   @moduledoc false
 
@@ -9,12 +9,12 @@ defmodule Aspis.CheckResult do
   @type status :: :honest | :corrupt | :unresolved
 
   defstruct [
-    # %Aspis.HexPackage{}
+    # %Hoplon.HexPackage{}
     :hex_package,
     :git_url,
     # {:tag, tag_name} | {:hash, sha-1}
     :git_ref,
-    # [Aspis.Diff.file_difference]
+    # [Hoplon.Diff.file_difference]
     :diffs,
     :error_reason
   ]
