@@ -1,8 +1,8 @@
-defmodule Mix.Tasks.Aspis.Check do
+defmodule Mix.Tasks.Hoplon.Check do
   use Mix.Task
 
-  alias Aspis.Utils
-  alias Aspis.CheckResult
+  alias Hoplon.Utils
+  alias Hoplon.CheckResult
 
   @shortdoc "Checks project's dependencies for hidden code"
 
@@ -18,18 +18,18 @@ defmodule Mix.Tasks.Aspis.Check do
   by the BEAM community, the published packages are rarely examined and
   it takes just one malicious maintainer to do a lot of damage.
 
-  Running `$ mix aspis.check` lets you screen for this form of attack.
+  Running `$ mix hoplon.check` lets you screen for this form of attack.
 
-  If `aspis` finds suspicious differences in the code or fails to resolve
+  If `hoplon` finds suspicious differences in the code or fails to resolve
   the repository, the task will exit with a non-zero code.
   """
 
   # TODO dehardcode this
-  @git_parent_directory "/tmp/aspis_repos"
+  @git_parent_directory "/tmp/hoplon_repos"
 
   @doc "Runs the task"
   def run(_args) do
-    with {:ok, _} <- Aspis.check_required_programs(),
+    with {:ok, _} <- Hoplon.check_required_programs(),
          {:ok, hex_packages_from_mix_lock} <- Utils.get_packages_from_mix_lock(),
          {:ok, project_deps_path} <- Utils.get_project_deps_path() do
       # TODO figure out if all of those are necessarily used or packages get kept in mix_lock after they stop being used
@@ -40,7 +40,7 @@ defmodule Mix.Tasks.Aspis.Check do
       results =
         Stream.map(relevant_packages, fn package ->
           Task.async(fn ->
-            Aspis.check_package(package, @git_parent_directory)
+            Hoplon.check_package(package, @git_parent_directory)
           end)
         end)
         |> Stream.map(fn task ->

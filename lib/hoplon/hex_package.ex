@@ -1,4 +1,4 @@
-defmodule Aspis.HexPackage do
+defmodule Hoplon.HexPackage do
   @moduledoc false
 
   defstruct [

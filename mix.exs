@@ -1,4 +1,4 @@
-defmodule Aspis.MixProject do
+defmodule Hoplon.MixProject do
   use Mix.Project
 
   # RELEASE CHECKLIST
@@ -14,13 +14,13 @@ defmodule Aspis.MixProject do
 
   def project do
     [
-      app: :aspis,
+      app: :hoplon,
       version: "0.1.0",
       elixir: "~> 1.4",
       package: package(),
       start_permanent: false,
       deps: deps(),
-      source_url: "https://github.com/nietaki/aspis"
+      source_url: "https://github.com/nietaki/hoplon"
     ]
   end
 
@@ -43,7 +43,7 @@ defmodule Aspis.MixProject do
       licenses: ["MIT"],
       maintainers: ["Jacek Królikowski <nietaki@gmail.com>"],
       links: %{
-        "GitHub" => "https://github.com/nietaki/aspis"
+        "GitHub" => "https://github.com/nietaki/hoplon"
       },
       description: description(),
       files: default_files() ++ ["scripts"]
@@ -57,7 +57,7 @@ defmodule Aspis.MixProject do
       "mix.exs",
       "README*",
       # "readme*",
-      "LICENSE*",
+      "LICENSE*"
       # "license*",
       # "CHANGELOG*",
       # "changelog*",
@@ -67,7 +67,7 @@ defmodule Aspis.MixProject do
 
   defp description do
     """
-    Aspis is a tool that verifies that your project's hex dependencies contain
+    Hoplon is a tool that verifies that your project's hex dependencies contain
     only the code they have listed on their GitHub.
     """
   end

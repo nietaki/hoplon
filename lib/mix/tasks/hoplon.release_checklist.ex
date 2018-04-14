@@ -1,13 +1,13 @@
-defmodule Mix.Tasks.Aspis.ReleaseChecklist do
+defmodule Mix.Tasks.Hoplon.ReleaseChecklist do
   use Mix.Task
 
-  alias Aspis.Git
-  alias Aspis.Utils
+  alias Hoplon.Git
+  alias Hoplon.Utils
 
-  @shortdoc "Prints a checklist for releasing aspis-compatible packages and its completion status"
+  @shortdoc "Prints a checklist for releasing hoplon-compatible packages and its completion status"
 
   @moduledoc """
-  Prints a checklist for releasing aspis-compatible packages and its completion status
+  Prints a checklist for releasing hoplon-compatible packages and its completion status
   """
 
   defmodule ChecklistItem do

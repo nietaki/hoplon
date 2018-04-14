@@ -1,10 +1,10 @@
-defmodule Mix.Tasks.Aspis.Diff do
+defmodule Mix.Tasks.Hoplon.Diff do
   use Mix.Task
 
-  alias Aspis.Diff
-  alias Aspis.CheckResult
-  alias Aspis.HexPackage
-  alias Aspis.Utils
+  alias Hoplon.Diff
+  alias Hoplon.CheckResult
+  alias Hoplon.HexPackage
+  alias Hoplon.Utils
 
   @shortdoc "Shows differences between pulled package dependency and its github code"
 
@@ -12,16 +12,16 @@ defmodule Mix.Tasks.Aspis.Diff do
   Prints out the diff between the repository code and the hex package code
   for a given dependency.
 
-      $ mix aspis.diff <package_name>
+      $ mix hoplon.diff <package_name>
 
   is equivalent to
 
       $ diff -r <package_code_directory> ./deps/<package_name>
 
-  You can provide custom options to `mix aspis.diff` - just add them after the package name.
+  You can provide custom options to `mix hoplon.diff` - just add them after the package name.
   For example
 
-      $ mix aspis.diff ecto -ruN -x .git
+      $ mix hoplon.diff ecto -ruN -x .git
 
   would translate to
 
@@ -32,18 +32,18 @@ defmodule Mix.Tasks.Aspis.Diff do
   """
 
   # TODO dehardcode this
-  @git_parent_directory "/tmp/aspis_repos"
+  @git_parent_directory "/tmp/hoplon_repos"
 
   @doc "Runs the task"
   def run([package_name | additional_args]) do
-    with {:ok, _} <- Aspis.check_required_programs(),
+    with {:ok, _} <- Hoplon.check_required_programs(),
          {:ok, hex_packages} <- Utils.get_packages_from_mix_lock(),
          {:ok, package} <- choose_hex_package(hex_packages, package_name),
          {:ok, project_deps_path} <- Utils.get_project_deps_path(),
          # FIXME a good amount of code below is duplicated and it shouldn't depend on CheckResult
          repo_path = Path.join(@git_parent_directory, Atom.to_string(package.name)),
          dep_path = Path.join(project_deps_path, Atom.to_string(package.name)),
-         result = Aspis.check_package(package, @git_parent_directory) do
+         result = Hoplon.check_package(package, @git_parent_directory) do
       case result do
         %CheckResult{git_url: nil} ->
           Utils.task_exit(11, "could not find package's github repo")
@@ -63,7 +63,7 @@ defmodule Mix.Tasks.Aspis.Diff do
   end
 
   def run(_) do
-    Utils.task_exit(1, "run mix aspis.check with the name of the package as the argument")
+    Utils.task_exit(1, "run mix hoplon.check with the name of the package as the argument")
   end
 
   defp choose_hex_package(hex_packages, name) do

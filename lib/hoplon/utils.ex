@@ -1,4 +1,4 @@
-defmodule Aspis.Utils do
+defmodule Hoplon.Utils do
   @moduledoc false
 
   @github_regex ~r|^https://github.com/[\w_-]+/[\w_-]+|
@@ -57,7 +57,7 @@ defmodule Aspis.Utils do
 
           res =
             map
-            |> Enum.flat_map(fn {name, spec} -> Aspis.HexPackage.maybe_new(name, spec) end)
+            |> Enum.flat_map(fn {name, spec} -> Hoplon.HexPackage.maybe_new(name, spec) end)
 
           {:ok, res}
       end

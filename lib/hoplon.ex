@@ -1,11 +1,11 @@
-defmodule Aspis do
+defmodule Hoplon do
   @moduledoc false
 
-  alias Aspis.Diff
-  alias Aspis.Git
-  alias Aspis.Utils
-  alias Aspis.HexPackage
-  alias Aspis.CheckResult
+  alias Hoplon.Diff
+  alias Hoplon.Git
+  alias Hoplon.Utils
+  alias Hoplon.HexPackage
+  alias Hoplon.CheckResult
 
   @program_dependencies ["git", "diff", "elixir"]
 
@@ -62,7 +62,7 @@ defmodule Aspis do
       |> Utils.split_lines()
       |> Enum.map(&String.trim/1)
 
-    if Enum.any?(output_lines, & &1 == "bisect run success") do
+    if Enum.any?(output_lines, &(&1 == "bisect run success")) do
       commit =
         output_lines
         |> Enum.reverse()
@@ -72,6 +72,7 @@ defmodule Aspis do
             nil -> nil
           end
         end)
+
       if commit do
         {:ok, commit}
       else
@@ -89,9 +90,9 @@ defmodule Aspis do
 
     with result = CheckResult.new(package),
          {:ok, result} <- add_git_url(result),
-         {:ok, _} <- Aspis.prepare_repo(result.git_url, repo_path),
+         {:ok, _} <- Hoplon.prepare_repo(result.git_url, repo_path),
          {:ok, result} <- checkout_version(result, repo_path),
-         diffs = Aspis.get_relevant_file_diffs(repo_path, dep_path),
+         diffs = Hoplon.get_relevant_file_diffs(repo_path, dep_path),
          result = %CheckResult{result | diffs: diffs} do
       result
     else
@@ -111,7 +112,7 @@ defmodule Aspis do
   end
 
   defp checkout_version(result, repo_path) do
-    case Aspis.checkout_version_by_tag(result.hex_package.version, repo_path) do
+    case Hoplon.checkout_version_by_tag(result.hex_package.version, repo_path) do
       {:ok, version_tag} ->
         {:ok, %CheckResult{result | git_ref: {:tag, version_tag}}}
 
