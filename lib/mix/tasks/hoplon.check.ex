@@ -38,7 +38,7 @@ defmodule Mix.Tasks.Hoplon.Check do
       IO.puts(CheckResult.header_line())
 
       results =
-        Stream.map(relevant_packages, fn package ->
+        Enum.map(relevant_packages, fn package ->
           Task.async(fn ->
             Hoplon.check_package(package, @git_parent_directory)
           end)
