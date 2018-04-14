@@ -38,13 +38,13 @@ defmodule Mix.Tasks.Aspis.Check do
       IO.puts(CheckResult.header_line())
 
       results =
-        Enum.map(relevant_packages, fn package ->
+        Stream.map(relevant_packages, fn package ->
           Task.async(fn ->
             Aspis.check_package(package, @git_parent_directory)
           end)
         end)
         |> Stream.map(fn task ->
-          Task.await(task)
+          Task.await(task, 120_000)
         end)
         |> Stream.each(fn r ->
           r |> CheckResult.representation_line() |> IO.puts()

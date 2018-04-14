@@ -1,4 +1,7 @@
 defmodule Aspis.Diff do
+
+  alias Aspis.Utils
+
   @moduledoc false
 
   @type file_difference ::
@@ -11,7 +14,7 @@ defmodule Aspis.Diff do
     {output, _status_code} = System.cmd("diff", ["-rq", left, right])
 
     output
-    |> String.split(~r/(\r\n\|\r|\n)/)
+    |> Utils.split_lines()
     |> Enum.map(&String.trim/1)
     |> Enum.reject(&(&1 == ""))
     |> Enum.map(&extract_file_difference(&1, left, right))

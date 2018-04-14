@@ -88,6 +88,25 @@ defmodule Aspis.Git do
     end
   end
 
+  def get_initial_commit(cd_path) do
+    with {:ok, str} <- arbitrary(["rev-list", "--max-parents=0", "HEAD"], cd_path),
+    do: {:ok, String.trim(str)}
+  end
+
+  def bisect_start(cd_path, from, to) do
+    arbitrary(["bisect", "start", to, from], cd_path, stderr_to_stdout: true)
+  end
+
+  def bisect_run(cd_path, script) do
+    args = ["bisect", "run"] ++ script
+    # stderr to stdout makes it silent, but gives us more stuff to discard :/
+    arbitrary(args, cd_path, stderr_to_stdout: true)
+  end
+
+  def bisect_reset(cd_path) do
+    arbitrary(["bisect", "reset"], cd_path, stderr_to_stdout: true)
+  end
+
   def get_tags(cd_path) do
     res =
       case arbitrary(["show-ref", "--tags"], cd_path) do
@@ -99,7 +118,7 @@ defmodule Aspis.Git do
     with {:ok, lines_string} <- res do
       res =
         lines_string
-        |> String.split(~r/(\r\n\|\r|\n)/, trim: true)
+        |> Utils.split_lines()
         |> Enum.map(fn line -> String.split(line, " ", parts: 2) end)
         |> Enum.map(fn [sha, tag] -> {sha, String.trim_leading(tag, "refs/tags/")} end)
 
@@ -107,8 +126,8 @@ defmodule Aspis.Git do
     end
   end
 
-  def arbitrary(args, cd_path) when is_list(args) and is_binary(cd_path) do
-    Utils.cmd("git", args, cd_path)
+  def arbitrary(args, cd_path, opts \\ []) when is_list(args) and is_binary(cd_path) do
+    Utils.cmd("git", args, cd_path, opts)
   end
 
   def attempt_checkout(treeish, cd_path) when is_binary(treeish) do

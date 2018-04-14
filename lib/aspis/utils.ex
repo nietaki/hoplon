@@ -129,6 +129,10 @@ defmodule Aspis.Utils do
     exit({:shutdown, exit_code})
   end
 
+  def split_lines(string) do
+    String.split(string, ~r/(\r\n\|\r|\n)/, trim: true)
+  end
+
   # ===========================================================================
   # Helper Functions
   # ===========================================================================

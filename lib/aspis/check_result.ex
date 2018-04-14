@@ -72,8 +72,9 @@ defmodule Aspis.CheckResult do
 
     located_by =
       case result.git_ref do
-        {:tag, tag} -> "tag:#{tag}"
+        {a, tag} when is_atom(a) -> "#{a}:#{tag}"
         nil -> "NOT_FOUND"
+        other -> inspect(other)
       end
 
     status_representation =

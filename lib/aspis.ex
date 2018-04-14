@@ -7,7 +7,7 @@ defmodule Aspis do
   alias Aspis.HexPackage
   alias Aspis.CheckResult
 
-  @program_dependencies ["git", "diff"]
+  @program_dependencies ["git", "diff", "elixir"]
 
   def check_required_programs() do
     missing_programs =
@@ -22,9 +22,11 @@ defmodule Aspis do
 
   def prepare_repo(git_url, path) do
     with {:ok, _} <- Git.ensure_repo(git_url, path),
+         {:ok, _} <- Git.bisect_reset(path),
          {:ok, _} <- Git.arbitrary(["checkout", "--quiet", "master"], path),
          {:ok, _} <- Git.arbitrary(["pull", "--quiet", "origin", "master"], path),
-         {:ok, _} <- Git.arbitrary(["fetch", "--quiet", "--tags"], path) do
+         {:ok, _} <- Git.arbitrary(["fetch", "--quiet", "--tags"], path),
+         {:ok, _} <- Git.arbitrary(["reset", "--quiet", "--hard", "HEAD"], path) do
       {:ok, :repo_prepared}
     end
   end
@@ -36,6 +38,47 @@ defmodule Aspis do
 
       {:error, _} ->
         Git.attempt_checkout("v" <> version, cd_path)
+    end
+  end
+
+  def checkout_version_by_git_bisect(version, cd_path) do
+    version_checker_path = Path.join(__DIR__, "../scripts/project_version_checker.exs")
+    # NOTE assumptions here
+    mix_exs_path = Path.join(cd_path, "mix.exs")
+    script = ["elixir", version_checker_path, mix_exs_path, version]
+    {:ok, initial_commit} = Git.get_initial_commit(cd_path)
+    {:ok, _} = Git.bisect_start(cd_path, initial_commit, "master")
+
+    {:ok, bisect_output} = Git.bisect_run(cd_path, script)
+    {:ok, _} = Git.bisect_reset(cd_path)
+    {:ok, commit} = extract_bisected_commit(bisect_output)
+    {:ok, _} = Git.arbitrary(["checkout", "--quiet", commit], cd_path)
+    {:ok, commit}
+  end
+
+  defp extract_bisected_commit(bisect_output) do
+    output_lines =
+      bisect_output
+      |> Utils.split_lines()
+      |> Enum.map(&String.trim/1)
+
+    if Enum.any?(output_lines, & &1 == "bisect run success") do
+      commit =
+        output_lines
+        |> Enum.reverse()
+        |> Enum.find_value(fn line ->
+          case Regex.run(~r/^([0-9a-f]{40}) is the first [a-z]* commit$/, line) do
+            [_whole, commit] -> commit
+            nil -> nil
+          end
+        end)
+      if commit do
+        {:ok, commit}
+      else
+        {:error, :commit_couldnt_be_found_in_bisect_output}
+      end
+    else
+      {:error, :not_found}
     end
   end
 
@@ -73,7 +116,8 @@ defmodule Aspis do
         {:ok, %CheckResult{result | git_ref: {:tag, version_tag}}}
 
       {:error, {:invalid_ref, _}} ->
-        {:error, CheckResult.set_error_reason(result, :could_not_find_git_tag)}
+        {:ok, commit} = checkout_version_by_git_bisect(result.hex_package.version, repo_path)
+        {:ok, %CheckResult{result | git_ref: {:bisect, commit}}}
     end
   end
 
