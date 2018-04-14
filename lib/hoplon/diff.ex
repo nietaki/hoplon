@@ -1,5 +1,4 @@
 defmodule Hoplon.Diff do
-
   alias Hoplon.Utils
 
   @moduledoc false

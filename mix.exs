@@ -57,7 +57,7 @@ defmodule Hoplon.MixProject do
       "mix.exs",
       "README*",
       # "readme*",
-      "LICENSE*",
+      "LICENSE*"
       # "license*",
       # "CHANGELOG*",
       # "changelog*",

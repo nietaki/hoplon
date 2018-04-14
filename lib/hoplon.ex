@@ -62,7 +62,7 @@ defmodule Hoplon do
       |> Utils.split_lines()
       |> Enum.map(&String.trim/1)
 
-    if Enum.any?(output_lines, & &1 == "bisect run success") do
+    if Enum.any?(output_lines, &(&1 == "bisect run success")) do
       commit =
         output_lines
         |> Enum.reverse()
@@ -72,6 +72,7 @@ defmodule Hoplon do
             nil -> nil
           end
         end)
+
       if commit do
         {:ok, commit}
       else

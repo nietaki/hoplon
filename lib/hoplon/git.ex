@@ -90,7 +90,7 @@ defmodule Hoplon.Git do
 
   def get_initial_commit(cd_path) do
     with {:ok, str} <- arbitrary(["rev-list", "--max-parents=0", "HEAD"], cd_path),
-    do: {:ok, String.trim(str)}
+         do: {:ok, String.trim(str)}
   end
 
   def bisect_start(cd_path, from, to) do
