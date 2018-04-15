@@ -47,14 +47,22 @@ defmodule Hoplon do
     # NOTE assumptions here
     mix_exs_path = Path.join(cd_path, "mix.exs")
     script = ["elixir", version_checker_path, mix_exs_path, version]
-    {:ok, initial_commit} = Git.get_initial_commit(cd_path)
-    {:ok, _} = Git.bisect_start(cd_path, initial_commit, "master")
 
-    {:ok, bisect_output} = Git.bisect_run(cd_path, script)
-    {:ok, _} = Git.bisect_reset(cd_path)
-    {:ok, commit} = extract_bisected_commit(bisect_output)
-    {:ok, _} = Git.arbitrary(["checkout", "--quiet", commit], cd_path)
-    {:ok, commit}
+    {:ok, master_commit} = Git.get_commit_hash(cd_path, "master")
+    {:ok, initial_commit} = Git.get_initial_commit(cd_path)
+
+    if master_commit == initial_commit do
+      # one commit repo, bisect would be confused
+      {:ok, master_commit}
+    else
+      {:ok, _} = Git.bisect_start(cd_path, initial_commit, "master")
+
+      {:ok, bisect_output} = Git.bisect_run(cd_path, script)
+      {:ok, _} = Git.bisect_reset(cd_path)
+      {:ok, commit} = extract_bisected_commit(bisect_output)
+      {:ok, _} = Git.arbitrary(["checkout", "--quiet", commit], cd_path)
+      {:ok, commit}
+    end
   end
 
   defp extract_bisected_commit(bisect_output) do

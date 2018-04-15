@@ -75,6 +75,12 @@ defmodule Hoplon.Git do
     end
   end
 
+  def get_commit_hash(cd_path, treeish) do
+    with {:ok, sha} <- arbitrary(["rev-parse", treeish], cd_path) do
+      {:ok, String.trim(sha)}
+    end
+  end
+
   def get_head_tags(cd_path) do
     with {:ok, head_sha} <- arbitrary(["rev-parse", "HEAD"], cd_path),
          head_sha = String.trim(head_sha),
