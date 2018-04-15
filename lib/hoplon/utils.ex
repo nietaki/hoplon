@@ -1,7 +1,7 @@
 defmodule Hoplon.Utils do
   @moduledoc false
 
-  @github_regex ~r|^https://github.com/[\w_-]+/[\w_-]+|
+  def github_regex(), do: ~r|^https://github.com/[\w_.-]+/[\w_.-]+|
 
   def get_project() do
     case Mix.Project.get() do
@@ -94,7 +94,7 @@ defmodule Hoplon.Utils do
       links
       |> Enum.filter(&is_github_link?/1)
       |> Enum.map(fn {_, url} -> url end)
-      |> Enum.map(&Regex.run(@github_regex, &1))
+      |> Enum.map(&Regex.run(github_regex(), &1))
       |> Enum.map(fn [match] -> match <> ".git" end)
 
     case matching_urls do
@@ -107,7 +107,7 @@ defmodule Hoplon.Utils do
   def is_github_link?({name, url}) do
     name_relevant = String.downcase(name) == "github"
 
-    url_relevant = Regex.match?(@github_regex, url)
+    url_relevant = Regex.match?(github_regex(), url)
     name_relevant && url_relevant
   end
 
