@@ -1,0 +1,51 @@
+defmodule Hoplon.Lockfile do
+  @enforce_keys [
+    :absolved
+  ]
+
+  @default_values %{
+    absolved: %{}
+  }
+
+  defstruct @enforce_keys
+
+  def new(), do: new(%{})
+
+  def new(nil), do: new(%{})
+
+  def new(contents) when is_map(contents) do
+    contents = Map.merge(@default_values, contents)
+    struct(__MODULE__, contents)
+  end
+
+  def to_contents_map(lf = %__MODULE__{}) do
+    Map.from_struct(lf)
+  end
+
+  def to_string(lf = %__MODULE__{}) do
+    contents_map = to_contents_map(lf)
+
+    Macro.to_string(quote(do: unquote(contents_map)))
+    |> Code.format_string!(line_length: 98)
+    |> IO.iodata_to_binary()
+  end
+
+  def from_string(representation) do
+    {result, _bindings} = Code.eval_string(representation)
+    new(result)
+  end
+
+  def read!(path) do
+    case File.read(path) do
+      {:error, :enoent} -> new()
+      {:ok, contents} -> from_string(contents)
+    end
+  end
+
+  def write!(lf = %__MODULE__{}, path) do
+    contents = __MODULE__.to_string(lf)
+    File.write!(path, contents, [:write, :utf8])
+
+    lf
+  end
+end
