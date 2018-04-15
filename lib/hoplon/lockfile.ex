@@ -1,4 +1,5 @@
 defmodule Hoplon.Lockfile do
+
   @enforce_keys [
     :absolved
   ]
@@ -8,6 +9,8 @@ defmodule Hoplon.Lockfile do
   }
 
   defstruct @enforce_keys
+
+  # TODO typespecs and docs here
 
   def new(), do: new(%{})
 
