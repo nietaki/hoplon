@@ -66,7 +66,7 @@ defmodule Mix.Tasks.Hoplon.Diff do
   end
 
   def run(_) do
-    Utils.task_exit(1, "run mix hoplon.check with the name of the package as the argument")
+    Utils.task_exit(1, "USAGE: $ mix hoplon.diff <package_name>")
   end
 
   defp choose_hex_package(hex_packages, name) do

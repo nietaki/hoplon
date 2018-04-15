@@ -38,6 +38,10 @@ defmodule Mix.Tasks.Hoplon.Absolve do
     end
   end
 
+  def run(_) do
+    Utils.task_exit(1, "USAGE: $ mix hoplon.absolve <package_name> <message>")
+  end
+
   defp choose_hex_package(hex_packages, name) do
     case Enum.find(hex_packages, &HexPackage.has_name?(&1, name)) do
       nil ->
