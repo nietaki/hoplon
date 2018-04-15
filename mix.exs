@@ -2,7 +2,7 @@ defmodule Hoplon.MixProject do
   use Mix.Project
 
   # RELEASE CHECKLIST
-  # - update the version here
+  # - bump version here
   # - update "Installation" section in the README with the new version
   # - check if README is outdated
   # - make sure there's no obviously missing or outdated docs
@@ -15,7 +15,7 @@ defmodule Hoplon.MixProject do
   def project do
     [
       app: :hoplon,
-      version: "0.2.1",
+      version: "0.3.0",
       elixir: "~> 1.4",
       package: package(),
       start_permanent: false,
