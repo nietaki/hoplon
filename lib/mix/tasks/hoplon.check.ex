@@ -3,6 +3,7 @@ defmodule Mix.Tasks.Hoplon.Check do
 
   alias Hoplon.Utils
   alias Hoplon.CheckResult
+  alias Hoplon.Lockfile
 
   @shortdoc "Checks project's dependencies for hidden code"
 
@@ -31,16 +32,19 @@ defmodule Mix.Tasks.Hoplon.Check do
   def run(_args) do
     with {:ok, _} <- Hoplon.check_required_programs(),
          {:ok, hex_packages_from_mix_lock} <- Utils.get_packages_from_mix_lock(),
+         {:ok, hoplon_lock_path} <- Utils.get_hoplon_lock_path(),
          {:ok, project_deps_path} <- Utils.get_project_deps_path() do
       # TODO figure out if all of those are necessarily used or packages get kept in mix_lock after they stop being used
       relevant_packages = hex_packages_from_mix_lock
+
+      lockfile = Lockfile.read!(hoplon_lock_path)
 
       IO.puts(CheckResult.header_line())
 
       results =
         Enum.map(relevant_packages, fn package ->
           Task.async(fn ->
-            Hoplon.check_package(package, @git_parent_directory)
+            Hoplon.check_package(package, @git_parent_directory, lockfile)
           end)
         end)
         |> Stream.map(fn task ->
