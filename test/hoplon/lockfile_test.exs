@@ -26,4 +26,32 @@ defmodule Hoplon.LockfileTest do
   test "from_string()" do
     assert %Lockfile{absolved: %{}} == Lockfile.from_string("%{absolved: %{}}")
   end
+
+  test "absolve" do
+    lf = Lockfile.absolve(@empty, :some_package, "some_hash", "my reason")
+
+    assert %Lockfile{
+             absolved: %{
+               some_package: %{
+                 "some_hash" => "my reason"
+               }
+             }
+           } == lf
+
+    lf = Lockfile.absolve(lf, :some_package, "other_hash", "other reason")
+
+    assert %Lockfile{
+             absolved: %{
+               some_package: %{
+                 "some_hash" => "my reason",
+                 "other_hash" => "other reason"
+               }
+             }
+           } == lf
+
+    lf = Lockfile.absolve(lf, :other_package, "foo", "bar")
+
+    assert lf.absolved[:other_package]["foo"] == "bar"
+    assert lf.absolved[:some_package]["some_hash"] == "my reason"
+  end
 end

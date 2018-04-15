@@ -48,4 +48,12 @@ defmodule Hoplon.Lockfile do
 
     lf
   end
+
+  def absolve(lf = %__MODULE__{absolved: absolved}, package, hash, message)
+      when is_atom(package) and is_binary(hash) and is_binary(message) do
+    package_map = Map.get(absolved, package, %{})
+    absolved = Map.put(absolved, package, package_map)
+    absolved = put_in(absolved, [package, hash], message)
+    %__MODULE__{lf | absolved: absolved}
+  end
 end
