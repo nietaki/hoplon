@@ -26,6 +26,5 @@ defmodule Hoplon.UtilsTest do
       repo_url = "https://github.com/JamesBond007/DEADBEEF"
       assert [repo_url] == Regex.run(github_regex(), repo_url)
     end
-
   end
 end

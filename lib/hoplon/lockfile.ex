@@ -1,5 +1,4 @@
 defmodule Hoplon.Lockfile do
-
   @enforce_keys [
     :absolved
   ]
@@ -34,7 +33,7 @@ defmodule Hoplon.Lockfile do
 
   defp format_code(code) do
     # only present in newer versions of Elixir, hoplon should work with older ones too
-    if Keyword.has_key?(Code.__info__(:functions), :"format_string!") do
+    if Keyword.has_key?(Code.__info__(:functions), :format_string!) do
       code
       |> Code.format_string!(line_length: 98)
       |> IO.iodata_to_binary()
