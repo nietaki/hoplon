@@ -26,8 +26,18 @@ defmodule Hoplon.Lockfile do
     contents_map = to_contents_map(lf)
 
     Macro.to_string(quote(do: unquote(contents_map)))
-    |> Code.format_string!(line_length: 98)
-    |> IO.iodata_to_binary()
+    |> format_code()
+  end
+
+  defp format_code(code) do
+    # only present in newer versions of Elixir, hoplon should work with older ones too
+    if Keyword.has_key?(Code.__info__(:functions), :"format_string!") do
+      code
+      |> Code.format_string!(line_length: 98)
+      |> IO.iodata_to_binary()
+    else
+      code
+    end
   end
 
   def from_string(representation) do
