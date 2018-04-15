@@ -6,6 +6,7 @@ defmodule Hoplon do
   alias Hoplon.Utils
   alias Hoplon.HexPackage
   alias Hoplon.CheckResult
+  alias Hoplon.Lockfile
 
   @program_dependencies ["git", "diff", "elixir"]
 
@@ -83,21 +84,29 @@ defmodule Hoplon do
     end
   end
 
-  def check_package(package = %HexPackage{}, git_parent_directory) do
+  def check_package(package = %HexPackage{}, git_parent_directory, lf = %Lockfile{}) do
     {:ok, project_deps_path} = Utils.get_project_deps_path()
     repo_path = Path.join(git_parent_directory, Atom.to_string(package.name))
     dep_path = Path.join(project_deps_path, Atom.to_string(package.name))
+    result = CheckResult.new(package)
 
-    with result = CheckResult.new(package),
-         {:ok, result} <- add_git_url(result),
-         {:ok, _} <- Hoplon.prepare_repo(result.git_url, repo_path),
-         {:ok, result} <- checkout_version(result, repo_path),
-         diffs = Hoplon.get_relevant_file_diffs(repo_path, dep_path),
-         result = %CheckResult{result | diffs: diffs} do
-      result
-    else
-      {:error, result = %CheckResult{}} ->
+    result =
+      with {:ok, result} <- add_git_url(result),
+           {:ok, _} <- Hoplon.prepare_repo(result.git_url, repo_path),
+           {:ok, result} <- checkout_version(result, repo_path),
+           diffs = Hoplon.get_relevant_file_diffs(repo_path, dep_path),
+           result = %CheckResult{result | diffs: diffs} do
         result
+      else
+        {:error, result = %CheckResult{}} ->
+          result
+      end
+
+    maybe_absolution_entry = get_in(lf.absolved, [package.hex_name, package.hash])
+
+    case maybe_absolution_entry do
+      nil -> result
+      msg when is_binary(msg) -> %CheckResult{result | absolution_message: msg}
     end
   end
 

@@ -5,6 +5,7 @@ defmodule Mix.Tasks.Hoplon.Diff do
   alias Hoplon.CheckResult
   alias Hoplon.HexPackage
   alias Hoplon.Utils
+  alias Hoplon.Lockfile
 
   @shortdoc "Shows differences between pulled package dependency and its github code"
 
@@ -40,10 +41,12 @@ defmodule Mix.Tasks.Hoplon.Diff do
          {:ok, hex_packages} <- Utils.get_packages_from_mix_lock(),
          {:ok, package} <- choose_hex_package(hex_packages, package_name),
          {:ok, project_deps_path} <- Utils.get_project_deps_path(),
+         {:ok, hoplon_lock_path} <- Utils.get_hoplon_lock_path(),
          # FIXME a good amount of code below is duplicated and it shouldn't depend on CheckResult
          repo_path = Path.join(@git_parent_directory, Atom.to_string(package.name)),
          dep_path = Path.join(project_deps_path, Atom.to_string(package.name)),
-         result = Hoplon.check_package(package, @git_parent_directory) do
+         lockfile = Lockfile.read!(hoplon_lock_path),
+         result = Hoplon.check_package(package, @git_parent_directory, lockfile) do
       case result do
         %CheckResult{git_url: nil} ->
           Utils.task_exit(11, "could not find package's github repo")

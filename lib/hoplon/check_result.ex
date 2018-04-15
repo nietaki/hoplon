@@ -6,7 +6,7 @@ defmodule Hoplon.CheckResult do
 
   @type t :: %__MODULE__{}
 
-  @type status :: :honest | :corrupt | :unresolved
+  @type status :: :honest | :corrupt | :unresolved | :absolved
 
   defstruct [
     # %Hoplon.HexPackage{}
@@ -16,7 +16,8 @@ defmodule Hoplon.CheckResult do
     :git_ref,
     # [Hoplon.Diff.file_difference]
     :diffs,
-    :error_reason
+    :error_reason,
+    :absolution_message
   ]
 
   def new(package = %HexPackage{}) do
@@ -31,6 +32,11 @@ defmodule Hoplon.CheckResult do
   end
 
   @spec get_status(t()) :: status()
+
+  def get_status(%__MODULE__{absolution_message: msg}) when msg != nil do
+    :absolved
+  end
+
   def get_status(%__MODULE__{git_url: nil}) do
     :unresolved
   end
@@ -47,6 +53,7 @@ defmodule Hoplon.CheckResult do
     :corrupt
   end
 
+  def get_exit_code_from_status(:absolved), do: 0
   def get_exit_code_from_status(:honest), do: 0
   def get_exit_code_from_status(:unresolved), do: 11
   def get_exit_code_from_status(:corrupt), do: 12
@@ -82,6 +89,7 @@ defmodule Hoplon.CheckResult do
         :honest -> "HONEST"
         :unresolved -> "UNRESOLVED"
         :corrupt -> "CORRUPT: #{inspect(result.diffs)}"
+        :absolved -> "ABSOLVED: #{result.hex_package.hash} - \"#{result.absolution_message}\""
       end
 
     line =
@@ -92,6 +100,7 @@ defmodule Hoplon.CheckResult do
 
   def reset_colour(), do: IO.ANSI.default_color()
 
+  def status_colour(:absolved), do: IO.ANSI.green()
   def status_colour(:honest), do: IO.ANSI.green()
   def status_colour(:corrupt), do: IO.ANSI.red()
   def status_colour(:unresolved), do: IO.ANSI.yellow()

@@ -40,6 +40,17 @@ defmodule Hoplon.Utils do
     end
   end
 
+  def get_hoplon_lock_path() do
+    case get_mix_lock_path() do
+      {:ok, mix_exs_path} ->
+        # yes, doing the work twice
+        {:ok, String.replace_suffix(mix_exs_path, "mix.lock", "hoplon.lock")}
+
+      {:error, reason} ->
+        {:error, reason}
+    end
+  end
+
   def get_project_root_directory() do
     with {:ok, mix_lock_path} <- get_mix_lock_path() do
       {:ok, Path.dirname(mix_lock_path)}

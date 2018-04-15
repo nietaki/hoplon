@@ -4,14 +4,16 @@ defmodule Hoplon.HexPackage do
   defstruct [
     :name,
     :hex_name,
-    :version
+    :version,
+    :hash
   ]
 
-  def new(name, {:hex, hex_name, version, _hash, _build_tools, _deps, _hexpm}) do
+  def new(name, {:hex, hex_name, version, hash, _build_tools, _deps, _hexpm}) do
     %__MODULE__{
       name: name,
       hex_name: hex_name,
-      version: version
+      version: version,
+      hash: hash
     }
   end
 
@@ -20,6 +22,7 @@ defmodule Hoplon.HexPackage do
     "#{name}" in ["#{package.name}", "#{package.hex_name}"]
   end
 
+  # TODO relax the restrictions here on build tools
   def maybe_new(name, spec = {:hex, _hex_name, _version, _hash, [:mix], _deps, "hexpm"}) do
     [new(name, spec)]
   end
