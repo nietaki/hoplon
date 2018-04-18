@@ -20,19 +20,20 @@ defmodule Hoplon.MixProject do
       package: package(),
       start_permanent: false,
       deps: deps(),
-      source_url: "https://github.com/nietaki/hoplon"
+      source_url: "https://github.com/nietaki/hoplon",
+      docs: docs(),
     ]
   end
 
   # Run "mix help compile.app" to learn about applications.
-  def application do
+  def application() do
     [
       extra_applications: [:logger]
     ]
   end
 
   # Run "mix help deps" to learn about dependencies.
-  defp deps do
+  defp deps() do
     [
       {:ex_doc, ">= 0.0.1", only: :dev, optional: true, runtime: false}
     ]
@@ -65,10 +66,20 @@ defmodule Hoplon.MixProject do
     ]
   end
 
-  defp description do
+  defp description() do
     """
     Hoplon is a tool that verifies that your project's hex dependencies contain
     only the code they have listed on their GitHub.
     """
+  end
+
+  defp docs do
+    [
+      main: "readme",
+      source_url: "https://github.com/nietaki/hoplon",
+      extras: ["README.md"],
+      assets: ["assets"],
+      logo: "assets/hoplon_logo_64.png",
+    ]
   end
 end
