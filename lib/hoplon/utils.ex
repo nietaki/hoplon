@@ -19,6 +19,43 @@ defmodule Hoplon.Utils do
     end
   end
 
+  def project_deps_packages(deps_list) do
+    deps_list
+    |> Enum.map(&normalize_package_entry/1)
+    |> Enum.filter(&is_hex_entry/1)
+    |> Enum.map(&inject_hex_name/1)
+    |> Enum.map(&elem(&1, 0))
+
+  end
+
+  defp is_hex_entry({_p, _, opts}) do
+    opts_keys = Keyword.keys(opts)
+    non_hex_keys = [:git, :github, :path]
+
+    (opts_keys -- non_hex_keys) == opts_keys
+  end
+
+  defp inject_hex_name({p, req, opts}) do
+    case Keyword.get(opts, :hex) do
+      nil ->
+        {p, req, opts}
+      hex_name when is_atom(hex_name) ->
+        {hex_name, req, opts}
+    end
+  end
+
+  defp normalize_package_entry({package, req}) when is_binary(req) do
+    {package, req, []}
+  end
+
+  defp normalize_package_entry({package, opts}) when is_list(opts) do
+    {package, "", opts}
+  end
+
+  defp normalize_package_entry(entry = {_, _, _}) do
+    entry
+  end
+
   def get_project_deps_path() do
     {:ok, Mix.Project.deps_path()}
   end
@@ -141,7 +178,7 @@ defmodule Hoplon.Utils do
   end
 
   def split_lines(string) do
-    String.split(string, ~r/(\r\n\|\r|\n)/, trim: true)
+    String.split(string, ~r/\R/, trim: true)
   end
 
   # ===========================================================================
