@@ -19,7 +19,7 @@ defmodule Hoplon.Utils do
     end
   end
 
-  def project_deps_packages(deps_list) do
+  def get_deps_package_names(deps_list) do
     deps_list
     |> Enum.map(&normalize_package_entry/1)
     |> Enum.filter(&is_hex_entry/1)

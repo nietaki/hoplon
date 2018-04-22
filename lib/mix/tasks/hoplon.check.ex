@@ -4,6 +4,7 @@ defmodule Mix.Tasks.Hoplon.Check do
   alias Hoplon.Utils
   alias Hoplon.CheckResult
   alias Hoplon.Lockfile
+  alias Hoplon.HexPackage
 
   @shortdoc "Checks project's dependencies for hidden code"
 
@@ -33,9 +34,11 @@ defmodule Mix.Tasks.Hoplon.Check do
     with {:ok, _} <- Hoplon.check_required_programs(),
          {:ok, hex_packages_from_mix_lock} <- Utils.get_packages_from_mix_lock(),
          {:ok, hoplon_lock_path} <- Utils.get_hoplon_lock_path(),
-         {:ok, project_deps_path} <- Utils.get_project_deps_path() do
-      # TODO figure out if all of those are necessarily used or packages get kept in mix_lock after they stop being used
-      relevant_packages = hex_packages_from_mix_lock
+         {:ok, project_deps_path} <- Utils.get_project_deps_path(),
+         {:ok, project_deps} <- Utils.get_project_deps() do
+
+      directly_used_package_names = Utils.get_deps_package_names(project_deps)
+      relevant_packages = get_relevant_packages(directly_used_package_names, hex_packages_from_mix_lock)
 
       lockfile = Lockfile.read!(hoplon_lock_path)
 
@@ -65,6 +68,25 @@ defmodule Mix.Tasks.Hoplon.Check do
     else
       {:error, reason} when is_atom(reason) ->
         Utils.task_exit(1, inspect(reason))
+    end
+  end
+
+  @spec get_relevant_packages([atom()], [%HexPackage{}]) :: [%HexPackage{}]
+  defp get_relevant_packages(used_package_names, mix_lock_packages) do
+    # get all dependencies of the used packages iteratively until nothing more gets added
+    further_dependencies =
+      mix_lock_packages
+      |> Enum.filter(fn %HexPackage{hex_name: name} -> name in used_package_names end)
+      |> Enum.flat_map(fn %HexPackage{depends_on: depends_on} -> depends_on end)
+
+    combined_dependencies = Enum.uniq(used_package_names ++ further_dependencies)
+
+    if Enum.count(combined_dependencies) > Enum.count(used_package_names) do
+      get_relevant_packages(combined_dependencies, mix_lock_packages)
+    else
+      # the dependency list stopped growing, let's return the right ones
+      mix_lock_packages
+      |> Enum.filter(fn %HexPackage{hex_name: name} -> name in combined_dependencies end)
     end
   end
 end

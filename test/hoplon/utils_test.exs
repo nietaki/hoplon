@@ -44,24 +44,24 @@ defmodule Hoplon.UtilsTest do
 
   describe "project_deps_hex_package_names" do
     test "skips the git - based dependencies" do
-      names = project_deps_packages(example_deps_list())
+      names = get_deps_package_names(example_deps_list())
       refute :signex in names
       refute :gettext in names
     end
 
     test "skips the path - based dependencies" do
-      names = project_deps_packages(example_deps_list())
+      names = get_deps_package_names(example_deps_list())
       refute :hoplon in names
     end
 
     test "uses hex package names instead of app names (if given)" do
-      names = project_deps_packages(example_deps_list())
+      names = get_deps_package_names(example_deps_list())
       refute :uuid in names
       assert :uuid_erl in names
     end
 
     test "keeps the normal stuff" do
-      names = project_deps_packages(example_deps_list())
+      names = get_deps_package_names(example_deps_list())
       assert :mix_test_watch in names
       assert :evil_left_pad in names
       assert :ace in names
