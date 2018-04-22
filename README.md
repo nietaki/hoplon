@@ -34,7 +34,7 @@ dependencies in `mix.exs`:
 ```elixir
 def deps do
   [
-    {:hoplon, ">= 0.1.0", app: false, runtime: false, optional: true}
+    {:hoplon, ">= 0.3.0", app: false, runtime: false, optional: true}
   ]
 end
 ```
