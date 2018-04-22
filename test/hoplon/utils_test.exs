@@ -27,4 +27,44 @@ defmodule Hoplon.UtilsTest do
       assert [repo_url] == Regex.run(github_regex(), repo_url)
     end
   end
+
+  defp example_deps_list() do
+    # based on a true story
+    [
+      {:mix_test_watch, "~> 0.5", [only: :dev, runtime: false]},
+      {:evil_left_pad, ">= 0.3.0"},
+      {:hoplon, path: "/path/to/local/hoplon"},
+      # this is also valid format https://hexdocs.pm/mix/Mix.Tasks.Deps.html
+      {:ace, []},
+      {:signex, github: "paywithcurl/signex", tag: "v1.5.2"},
+      {:gettext, git: "https://github.com/elixir-lang/gettext.git", tag: "0.1"},
+      {:uuid, "~> 1.7", hex: :uuid_erl}
+    ]
+  end
+
+  describe "project_deps_hex_package_names" do
+    test "skips the git - based dependencies" do
+      names = get_deps_package_names(example_deps_list())
+      refute :signex in names
+      refute :gettext in names
+    end
+
+    test "skips the path - based dependencies" do
+      names = get_deps_package_names(example_deps_list())
+      refute :hoplon in names
+    end
+
+    test "uses hex package names instead of app names (if given)" do
+      names = get_deps_package_names(example_deps_list())
+      refute :uuid in names
+      assert :uuid_erl in names
+    end
+
+    test "keeps the normal stuff" do
+      names = get_deps_package_names(example_deps_list())
+      assert :mix_test_watch in names
+      assert :evil_left_pad in names
+      assert :ace in names
+    end
+  end
 end
