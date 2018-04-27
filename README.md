@@ -3,6 +3,8 @@
 Hoplon is a package that helps you verify that the code in your project's dependencies
 contains exactly what's on their GitHub and no other malicious code.
 
+Check out [nietaki/suffixer](https://github.com/nietaki/suffixer) to see how it works in practice.
+
 **NOTE**: Hoplon is still in early stage of development and might not be stable enough for your needs.
 
 [![travis badge](https://travis-ci.org/nietaki/hoplon.svg?branch=master)](https://travis-ci.org/nietaki/hoplon)
