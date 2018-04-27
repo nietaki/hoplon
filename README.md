@@ -8,7 +8,6 @@ contains exactly what's on their GitHub and no other malicious code.
 [![travis badge](https://travis-ci.org/nietaki/hoplon.svg?branch=master)](https://travis-ci.org/nietaki/hoplon)
 [![Hex.pm](https://img.shields.io/hexpm/v/hoplon.svg)](https://hex.pm/packages/hoplon)
 [![docs](https://img.shields.io/badge/docs-hexdocs-yellow.svg)](https://hexdocs.pm/hoplon/)
-[![Built with Spacemacs](https://cdn.rawgit.com/syl20bnr/spacemacs/442d025779da2f62fc86c2082703697714db6514/assets/spacemacs-badge.svg)](http://spacemacs.org)
 <!--[![Coverage Status](https://coveralls.io/repos/github/nietaki/hoplon/badge.svg?branch=master)](https://coveralls.io/github/nietaki/hoplon?branch=master)-->
 
 ## Usage
