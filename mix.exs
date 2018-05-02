@@ -22,6 +22,11 @@ defmodule Hoplon.MixProject do
       deps: deps(),
       source_url: "https://github.com/nietaki/hoplon",
       docs: docs(),
+
+      # coveralls stuff
+      test_coverage: [tool: ExCoveralls],
+      preferred_cli_env: ["coveralls": :test, "coveralls.detail": :test, "coveralls.post": :test, "coveralls.html": :test]
+
     ]
   end
 
@@ -35,7 +40,8 @@ defmodule Hoplon.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps() do
     [
-      {:ex_doc, ">= 0.0.1", only: :dev, optional: true, runtime: false}
+      {:ex_doc, ">= 0.0.1", only: :dev, optional: true, runtime: false},
+      {:excoveralls, "~> 0.8.1", only: :test, optional: true},
     ]
   end
 
