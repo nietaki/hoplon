@@ -146,6 +146,10 @@ defmodule Hoplon.Git do
     end
   end
 
+  # --------------------------------------------------------------------------
+  # Pure functions
+  # --------------------------------------------------------------------------
+
   # NOTE: this doesn't really validate the git url
   def get_github_user_and_package_from_git_url(git_url) when is_binary(git_url) do
     case Regex.run(~r{([\w_.-]+)/([\w_.-]+).git$}, git_url) do

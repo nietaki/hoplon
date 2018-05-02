@@ -1,8 +1,7 @@
 defmodule Hoplon.Utils do
   @moduledoc false
 
-  def github_regex(), do: ~r|^https://github.com/[\w_.-]+/[\w_.-]+|
-
+  @spec get_project() :: {:ok, module()} | {:error, atom()}
   def get_project() do
     case Mix.Project.get() do
       nil ->
@@ -13,47 +12,11 @@ defmodule Hoplon.Utils do
     end
   end
 
+  @spec get_project_deps() :: {:ok, [tuple()]} | :error
   def get_project_deps() do
     with {:ok, module} <- get_project() do
       module.project() |> Keyword.fetch(:deps)
     end
-  end
-
-  def get_deps_package_names(deps_list) do
-    deps_list
-    |> Enum.map(&normalize_package_entry/1)
-    |> Enum.filter(&is_hex_entry/1)
-    |> Enum.map(&inject_hex_name/1)
-    |> Enum.map(&elem(&1, 0))
-
-  end
-
-  defp is_hex_entry({_p, _, opts}) do
-    opts_keys = Keyword.keys(opts)
-    non_hex_keys = [:git, :github, :path]
-
-    (opts_keys -- non_hex_keys) == opts_keys
-  end
-
-  defp inject_hex_name({p, req, opts}) do
-    case Keyword.get(opts, :hex) do
-      nil ->
-        {p, req, opts}
-      hex_name when is_atom(hex_name) ->
-        {hex_name, req, opts}
-    end
-  end
-
-  defp normalize_package_entry({package, req}) when is_binary(req) do
-    {package, req, []}
-  end
-
-  defp normalize_package_entry({package, opts}) when is_list(opts) do
-    {package, "", opts}
-  end
-
-  defp normalize_package_entry(entry = {_, _, _}) do
-    entry
   end
 
   def get_project_deps_path() do
@@ -123,6 +86,7 @@ defmodule Hoplon.Utils do
     {:ok, data}
   end
 
+  # TODO split this into impure fetching from hex and pure parsing
   def get_github_git_url(package) do
     {:ok, data} = get_hex_info(package)
     links = get_in(data, ["meta", "links"])
@@ -139,13 +103,6 @@ defmodule Hoplon.Utils do
       [url] -> {:ok, url}
       [_ | _] -> {:error, :multiple_github_urls_found}
     end
-  end
-
-  def is_github_link?({name, url}) do
-    name_relevant = String.downcase(name) == "github"
-
-    url_relevant = Regex.match?(github_regex(), url)
-    name_relevant && url_relevant
   end
 
   def cmd(command, args, cd_path \\ nil, opts \\ []) when is_binary(command) and is_list(args) do
@@ -177,9 +134,59 @@ defmodule Hoplon.Utils do
     exit({:shutdown, exit_code})
   end
 
+  # --------------------------------------------------------------------------
+  # Pure functions
+  # --------------------------------------------------------------------------
+
+  def get_deps_package_names(deps_list) do
+    deps_list
+    |> Enum.map(&normalize_package_entry/1)
+    |> Enum.filter(&is_hex_entry/1)
+    |> Enum.map(&inject_hex_name/1)
+    |> Enum.map(&elem(&1, 0))
+
+  end
+
+  defp normalize_package_entry({package, req}) when is_binary(req) do
+    {package, req, []}
+  end
+
+  defp normalize_package_entry({package, opts}) when is_list(opts) do
+    {package, "", opts}
+  end
+
+  defp normalize_package_entry(entry = {_, _, _}) do
+    entry
+  end
+
+  defp is_hex_entry({_p, _, opts}) do
+    opts_keys = Keyword.keys(opts)
+    non_hex_keys = [:git, :github, :path]
+
+    (opts_keys -- non_hex_keys) == opts_keys
+  end
+
+  defp inject_hex_name({p, req, opts}) do
+    case Keyword.get(opts, :hex) do
+      nil ->
+        {p, req, opts}
+      hex_name when is_atom(hex_name) ->
+        {hex_name, req, opts}
+    end
+  end
+
+  def is_github_link?({name, url}) do
+    name_relevant = String.downcase(name) == "github"
+
+    url_relevant = Regex.match?(github_regex(), url)
+    name_relevant && url_relevant
+  end
+
   def split_lines(string) do
     String.split(string, ~r/\R/, trim: true)
   end
+
+  def github_regex(), do: ~r|^https://github.com/[\w_.-]+/[\w_.-]+|
 
   # ===========================================================================
   # Helper Functions
