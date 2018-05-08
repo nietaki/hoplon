@@ -25,8 +25,12 @@ defmodule Hoplon.MixProject do
 
       # coveralls stuff
       test_coverage: [tool: ExCoveralls],
-      preferred_cli_env: ["coveralls": :test, "coveralls.detail": :test, "coveralls.post": :test, "coveralls.html": :test]
-
+      preferred_cli_env: [
+        coveralls: :test,
+        "coveralls.detail": :test,
+        "coveralls.post": :test,
+        "coveralls.html": :test
+      ]
     ]
   end
 
@@ -41,7 +45,7 @@ defmodule Hoplon.MixProject do
   defp deps() do
     [
       {:ex_doc, ">= 0.0.1", only: :dev, optional: true, runtime: false},
-      {:excoveralls, "~> 0.8.1", only: :test, optional: true},
+      {:excoveralls, "~> 0.8.1", only: :test, optional: true}
     ]
   end
 
@@ -85,7 +89,7 @@ defmodule Hoplon.MixProject do
       source_url: "https://github.com/nietaki/hoplon",
       extras: ["README.md"],
       assets: ["assets"],
-      logo: "assets/hoplon_logo_64.png",
+      logo: "assets/hoplon_logo_64.png"
     ]
   end
 end

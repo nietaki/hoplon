@@ -10,7 +10,8 @@ defmodule Hoplon do
 
   @program_dependencies ["git", "diff", "elixir"]
 
-  @spec check_required_programs([String.t]) :: {:ok, term()} | {:error, {:missing_required_programs, [String.t]}}
+  @spec check_required_programs([String.t()]) ::
+          {:ok, term()} | {:error, {:missing_required_programs, [String.t()]}}
   def check_required_programs(required_programs \\ @program_dependencies) do
     missing_programs =
       required_programs
