@@ -10,7 +10,7 @@ Check out [nietaki/suffixer](https://github.com/nietaki/suffixer) to see how it 
 [![travis badge](https://travis-ci.org/nietaki/hoplon.svg?branch=master)](https://travis-ci.org/nietaki/hoplon)
 [![Hex.pm](https://img.shields.io/hexpm/v/hoplon.svg)](https://hex.pm/packages/hoplon)
 [![docs](https://img.shields.io/badge/docs-hexdocs-yellow.svg)](https://hexdocs.pm/hoplon/)
-<!--[![Coverage Status](https://coveralls.io/repos/github/nietaki/hoplon/badge.svg?branch=master)](https://coveralls.io/github/nietaki/hoplon?branch=master)-->
+[![Coverage Status](https://coveralls.io/repos/github/nietaki/hoplon/badge.svg?branch=master)](https://coveralls.io/github/nietaki/hoplon?branch=master)
 
 ## Usage
 
