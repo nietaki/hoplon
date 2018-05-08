@@ -23,7 +23,7 @@ defmodule Hoplon.Utils do
     {:ok, Mix.Project.deps_path()}
   end
 
-  def get_mix_lock_path() do
+  defp get_mix_lock_path() do
     mix_exs_files =
       Mix.Project.config_files()
       |> Enum.filter(&String.ends_with?(&1, "/mix.exs"))
@@ -75,11 +75,11 @@ defmodule Hoplon.Utils do
     end
   end
 
-  def get_hex_info(package) when is_atom(package) do
+  defp get_hex_info(package) when is_atom(package) do
     get_hex_info(Atom.to_string(package))
   end
 
-  def get_hex_info(package) when is_binary(package) do
+  defp get_hex_info(package) when is_binary(package) do
     # TODO dehardcode "hexpm"
     # TODO error handling
     {:ok, {200, data, _headers}} = Hex.API.Package.get("hexpm", package)

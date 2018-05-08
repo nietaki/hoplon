@@ -27,7 +27,7 @@ defmodule Mix.Tasks.Hoplon.Check do
   """
 
   # TODO dehardcode this
-  @git_parent_directory "/tmp/hoplon_repos"
+  @git_parent_directory "~/.hoplon/repos"
 
   @doc "Runs the task"
   def run(_args) do

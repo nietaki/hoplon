@@ -7,11 +7,11 @@ defmodule Hoplon.Git do
   # API Functions
   # ===========================================================================
 
-  def clone(git_url, path) do
+  defp clone(git_url, path) do
     Utils.cmd("git", ["clone", "--quiet", git_url, path])
   end
 
-  def verify_remote(git_url, path) do
+  defp verify_remote(git_url, path) do
     remote_result = arbitrary(["remote", "get-url", "origin"], path)
 
     with {:ok, remote_url} <- remote_result,
@@ -23,7 +23,7 @@ defmodule Hoplon.Git do
     end
   end
 
-  def purge_repo(path) do
+  defp purge_repo(path) do
     if is_empty_directory(path) || is_repo_directory(path) do
       File.rm_rf(path)
       {:ok, :purged}
@@ -32,14 +32,14 @@ defmodule Hoplon.Git do
     end
   end
 
-  def is_empty_directory(path) do
+  defp is_empty_directory(path) do
     case File.ls(path) do
       {:ok, []} -> true
       _ -> false
     end
   end
 
-  def is_repo_directory(path) do
+  defp is_repo_directory(path) do
     with {:ok, items} <- File.ls(path),
          true <- ".git" in items do
       true
@@ -94,6 +94,25 @@ defmodule Hoplon.Git do
     end
   end
 
+  defp get_tags(cd_path) do
+    res =
+      case arbitrary(["show-ref", "--tags"], cd_path) do
+        {:ok, str} -> {:ok, str}
+        {:error, {"", _}} -> {:ok, ""}
+        other -> other
+      end
+
+    with {:ok, lines_string} <- res do
+      res =
+        lines_string
+        |> Utils.split_lines()
+        |> Enum.map(fn line -> String.split(line, " ", parts: 2) end)
+        |> Enum.map(fn [sha, tag] -> {sha, String.trim_leading(tag, "refs/tags/")} end)
+
+      {:ok, res}
+    end
+  end
+
   def get_initial_commit(cd_path) do
     with {:ok, str} <- arbitrary(["rev-list", "--max-parents=0", "HEAD"], cd_path),
          do: {:ok, String.trim(str)}
@@ -111,25 +130,6 @@ defmodule Hoplon.Git do
 
   def bisect_reset(cd_path) do
     arbitrary(["bisect", "reset"], cd_path, stderr_to_stdout: true)
-  end
-
-  def get_tags(cd_path) do
-    res =
-      case arbitrary(["show-ref", "--tags"], cd_path) do
-        {:ok, str} -> {:ok, str}
-        {:error, {"", _}} -> {:ok, ""}
-        other -> other
-      end
-
-    with {:ok, lines_string} <- res do
-      res =
-        lines_string
-        |> Utils.split_lines()
-        |> Enum.map(fn line -> String.split(line, " ", parts: 2) end)
-        |> Enum.map(fn [sha, tag] -> {sha, String.trim_leading(tag, "refs/tags/")} end)
-
-      {:ok, res}
-    end
   end
 
   def arbitrary(args, cd_path, opts \\ []) when is_list(args) and is_binary(cd_path) do
