@@ -2,8 +2,9 @@ defmodule HoplonTest do
   use ExUnit.Case
   doctest Hoplon
 
+  @moduletag :integration
+
   describe "check_required_programs()" do
-    @describetag :integration
     test "reports missing programs correctly" do
       made_up_programs = ["dkkldfoivnvlkd", "lqoiiodndkfldkfjsd"]
 

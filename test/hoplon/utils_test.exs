@@ -70,6 +70,7 @@ defmodule Hoplon.UtilsTest do
 
   describe "integration" do
     @describetag :integration
+
     test "get_project()" do
       assert {:ok, module} = Utils.get_project()
       assert Hoplon.MixProject == module

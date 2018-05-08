@@ -17,6 +17,7 @@ defmodule Hoplon.MixProject do
       app: :hoplon,
       version: "0.3.2",
       elixir: "~> 1.4",
+      elixirc_paths: elixirc_paths(Mix.env()),
       package: package(),
       start_permanent: false,
       deps: deps(),
@@ -33,6 +34,9 @@ defmodule Hoplon.MixProject do
       ]
     ]
   end
+
+  defp elixirc_paths(:test), do: ["lib", "test/support"]
+  defp elixirc_paths(_), do: ["lib"]
 
   # Run "mix help compile.app" to learn about applications.
   def application() do
