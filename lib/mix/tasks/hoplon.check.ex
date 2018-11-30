@@ -34,7 +34,7 @@ defmodule Mix.Tasks.Hoplon.Check do
     with {:ok, _} <- Hoplon.check_required_programs(),
          {:ok, hex_packages_from_mix_lock} <- Utils.get_packages_from_mix_lock(),
          {:ok, hoplon_lock_path} <- Utils.get_hoplon_lock_path(),
-         {:ok, project_deps_path} <- Utils.get_project_deps_path(),
+         {:ok, _project_deps_path} <- Utils.get_project_deps_path(),
          {:ok, project_deps} <- Utils.get_project_deps() do
 
       directly_used_package_names = Utils.get_deps_package_names(project_deps)
