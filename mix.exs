@@ -21,7 +21,7 @@ defmodule Hoplon.MixProject do
       start_permanent: false,
       deps: deps(),
       source_url: "https://github.com/nietaki/hoplon",
-      docs: docs(),
+      docs: docs()
     ]
   end
 
@@ -79,7 +79,7 @@ defmodule Hoplon.MixProject do
       source_url: "https://github.com/nietaki/hoplon",
       extras: ["README.md"],
       assets: ["assets"],
-      logo: "assets/hoplon_logo_64.png",
+      logo: "assets/hoplon_logo_64.png"
     ]
   end
 end

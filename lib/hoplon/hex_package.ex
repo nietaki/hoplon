@@ -1,5 +1,4 @@
 defmodule Hoplon.HexPackage do
-
   alias Hoplon.Utils
 
   @moduledoc false
@@ -13,7 +12,8 @@ defmodule Hoplon.HexPackage do
   ]
 
   def new(name, {:hex, hex_name, version, hash, _build_tools, deps, _hexpm}) do
-    depends_on =  Utils.get_deps_package_names(deps)
+    depends_on = Utils.get_deps_package_names(deps)
+
     %__MODULE__{
       name: name,
       hex_name: hex_name,

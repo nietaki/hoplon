@@ -36,9 +36,10 @@ defmodule Mix.Tasks.Hoplon.Check do
          {:ok, hoplon_lock_path} <- Utils.get_hoplon_lock_path(),
          {:ok, project_deps_path} <- Utils.get_project_deps_path(),
          {:ok, project_deps} <- Utils.get_project_deps() do
-
       directly_used_package_names = Utils.get_deps_package_names(project_deps)
-      relevant_packages = get_relevant_packages(directly_used_package_names, hex_packages_from_mix_lock)
+
+      relevant_packages =
+        get_relevant_packages(directly_used_package_names, hex_packages_from_mix_lock)
 
       lockfile = Lockfile.read!(hoplon_lock_path)
 
