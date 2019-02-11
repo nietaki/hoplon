@@ -25,20 +25,20 @@ defmodule Hoplon.Utils do
     |> Enum.filter(&is_hex_entry/1)
     |> Enum.map(&inject_hex_name/1)
     |> Enum.map(&elem(&1, 0))
-
   end
 
   defp is_hex_entry({_p, _, opts}) do
     opts_keys = Keyword.keys(opts)
     non_hex_keys = [:git, :github, :path]
 
-    (opts_keys -- non_hex_keys) == opts_keys
+    opts_keys -- non_hex_keys == opts_keys
   end
 
   defp inject_hex_name({p, req, opts}) do
     case Keyword.get(opts, :hex) do
       nil ->
         {p, req, opts}
+
       hex_name when is_atom(hex_name) ->
         {hex_name, req, opts}
     end
