@@ -1,8 +1,11 @@
 defmodule Hoplon.CryptoTest do
   use ExUnit.Case
   require Hoplon.Crypto.Records
+  require Record
 
   @password 'test'
+  # https://crypto.stackexchange.com/a/10825
+  @standard_rsa_public_exponent 65537
 
   test "interacting with pem keys generated using openssl" do
     # the keys were generated using the following commands:
@@ -42,6 +45,7 @@ defmodule Hoplon.CryptoTest do
     assert is_integer(Hoplon.Crypto.Records.rsa_public_key(rsa_public_key, :modulus))
 
     public_exponent = Hoplon.Crypto.Records.rsa_private_key(rsa_private_key, :publicExponent)
+    assert public_exponent == @standard_rsa_public_exponent
     modulus = Hoplon.Crypto.Records.rsa_private_key(rsa_private_key, :modulus)
 
     assert rsa_public_key ==
@@ -49,7 +53,41 @@ defmodule Hoplon.CryptoTest do
                publicExponent: public_exponent,
                modulus: modulus
              )
+  end
 
-    Hoplon.Crypto.Records.rsa_public_key()
+  test "generating new RSA key pair" do
+    size = 2048
+    rsa_private_key = :public_key.generate_key({:rsa, size, @standard_rsa_public_exponent})
+    assert Record.is_record(rsa_private_key)
+    modulus = Hoplon.Crypto.Records.rsa_private_key(rsa_private_key, :modulus)
+
+    # logarithms on big numbers are hard for erlang
+    assert Math.pow(2, size - 1) <= modulus
+    assert Math.pow(2, size) > modulus
+  end
+
+  test "signing and verifying a signature" do
+    size = 2048
+    rsa_private_key = :public_key.generate_key({:rsa, size, @standard_rsa_public_exponent})
+    public_exponent = Hoplon.Crypto.Records.rsa_private_key(rsa_private_key, :publicExponent)
+    modulus = Hoplon.Crypto.Records.rsa_private_key(rsa_private_key, :modulus)
+
+    message = "I'm an arbitrary binary message that happens to be an ascii string! "
+    message = String.duplicate(message, 100)
+
+    # if the message isn't digested, the signature fails for bigger messages (but not all that huge)
+    digest_type = :sha512
+    rsa_pk_sign_verify_opts = []
+
+    # this is a plain binary, not base64 encoded
+    signature = :public_key.sign(message, digest_type, rsa_private_key, rsa_pk_sign_verify_opts)
+    rsa_public_key = Hoplon.Crypto.Records.rsa_public_key(publicExponent: public_exponent, modulus: modulus)
+
+    assert :public_key.verify(message, digest_type, signature, rsa_public_key, rsa_pk_sign_verify_opts)
+    assert :public_key.verify(message, digest_type, signature, rsa_public_key)
+
+    refute :public_key.verify(message <> "x", digest_type, signature, rsa_public_key)
+    refute :public_key.verify(message, :sha, signature, rsa_public_key)
+    # TODO tests for other cases that shouldn't succeed, once we start using StreamData
   end
 end

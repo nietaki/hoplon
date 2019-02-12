@@ -35,7 +35,9 @@ defmodule Hoplon.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps() do
     [
-      {:ex_doc, ">= 0.0.1", only: :dev, optional: true, runtime: false}
+      {:ex_doc, ">= 0.0.1", only: :dev, optional: true, runtime: false},
+      # temporary, just for tests
+      {:math, ">= 0.0.1", only: :test, optional: true, runtime: false}
     ]
   end
 
