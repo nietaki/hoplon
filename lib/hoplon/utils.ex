@@ -166,6 +166,8 @@ defmodule Hoplon.Utils do
     end
   end
 
+  @spec task_exit(integer) :: no_return()
+  @spec task_exit(integer, String.t() | nil) :: no_return()
   def task_exit(exit_code, message \\ nil) when is_integer(exit_code) do
     case {exit_code, message} do
       {_, nil} -> :ok
