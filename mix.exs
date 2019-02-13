@@ -26,7 +26,7 @@ defmodule Hoplon.MixProject do
       source_url: "https://github.com/nietaki/hoplon",
       docs: docs(),
       dialyzer: [
-        plt_add_apps: [:mix, :hex],
+        plt_add_apps: [:mix],
         ignore_warnings: "dialyzer_ignore.exs",
         list_unused_filters: true
       ]
