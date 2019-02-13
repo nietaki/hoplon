@@ -124,7 +124,6 @@ defmodule Hoplon do
     end
   end
 
-  @spec add_git_url(%CheckResult{}) :: {:ok, %CheckResult{}} | {:error, %CheckResult{}}
   defp add_git_url(result) do
     case Utils.get_github_git_url(result.hex_package.hex_name) do
       {:ok, git_url} ->
