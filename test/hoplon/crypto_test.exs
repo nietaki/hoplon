@@ -81,13 +81,40 @@ defmodule Hoplon.CryptoTest do
 
     # this is a plain binary, not base64 encoded
     signature = :public_key.sign(message, digest_type, rsa_private_key, rsa_pk_sign_verify_opts)
-    rsa_public_key = Hoplon.Crypto.Records.rsa_public_key(publicExponent: public_exponent, modulus: modulus)
 
-    assert :public_key.verify(message, digest_type, signature, rsa_public_key, rsa_pk_sign_verify_opts)
+    rsa_public_key =
+      Hoplon.Crypto.Records.rsa_public_key(publicExponent: public_exponent, modulus: modulus)
+
+    assert :public_key.verify(
+             message,
+             digest_type,
+             signature,
+             rsa_public_key,
+             rsa_pk_sign_verify_opts
+           )
+
     assert :public_key.verify(message, digest_type, signature, rsa_public_key)
 
     refute :public_key.verify(message <> "x", digest_type, signature, rsa_public_key)
     refute :public_key.verify(message, :sha, signature, rsa_public_key)
     # TODO tests for other cases that shouldn't succeed, once we start using StreamData
+  end
+
+  test "verifying a signature from openssh pkeyutl" do
+    # commands used:
+    # $ openssl dgst -sha512 -binary message.txt > message.digest
+    # $ openssl pkeyutl -sign -in message.digest -inkey private.pem -out message.sig -pkeyopt digest:sha512
+
+    public_key_pem_file_contents = File.read!("test/assets/public.pem")
+    [rsa_public_key_entry] = :public_key.pem_decode(public_key_pem_file_contents)
+    rsa_public_key = :public_key.pem_entry_decode(rsa_public_key_entry)
+
+    # Note, usually the signatures would be encoded in hex, which is something we will do, TODO
+    original_message = File.read!("test/assets/message.txt")
+    openssl_signature = File.read!("test/assets/message.sig")
+
+    assert :public_key.verify(original_message, :sha512, openssl_signature, rsa_public_key)
+    refute :public_key.verify(original_message <> "x", :sha512, openssl_signature, rsa_public_key)
+    refute :public_key.verify(original_message, :sha, openssl_signature, rsa_public_key)
   end
 end
