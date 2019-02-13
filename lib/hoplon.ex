@@ -112,6 +112,7 @@ defmodule Hoplon do
       case result_tuple do
         {:ok, result = %CheckResult{}} ->
           result
+
         {:error, result = %CheckResult{}} ->
           result
       end
