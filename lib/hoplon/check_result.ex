@@ -27,8 +27,9 @@ defmodule Hoplon.CheckResult do
     }
   end
 
-  def set_error_reason(package, error) do
-    %__MODULE__{package | error_reason: error}
+  @spec set_error_reason(t, term) :: t
+  def set_error_reason(error, reason) do
+    %__MODULE__{error | error_reason: reason}
   end
 
   @spec get_status(t()) :: status()
