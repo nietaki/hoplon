@@ -8,9 +8,13 @@ defmodule Hoplon.Crypto.Records do
     Record.extract(:RSAPrivateKey, from_lib: "public_key/include/public_key.hrl")
   )
 
+  @opaque rsa_private_key :: tuple()
+
   Record.defrecord(
     :rsa_public_key,
     :RSAPublicKey,
     Record.extract(:RSAPublicKey, from_lib: "public_key/include/public_key.hrl")
   )
+
+  @opaque rsa_public_key :: tuple()
 end
