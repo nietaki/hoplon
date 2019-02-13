@@ -51,7 +51,7 @@ defmodule Hoplon.CryptoTest do
       entries = :public_key.pem_decode(public_key_pem_file_contents)
       assert [rsa_public_key_entry] = entries
 
-      assert {:SubjectPublicKeyInfo, der, :not_encrypted} = rsa_public_key_entry
+      assert {:SubjectPublicKeyInfo, _der, :not_encrypted} = rsa_public_key_entry
       assert is_binary(salt)
       assert byte_size(salt) == 8
 
