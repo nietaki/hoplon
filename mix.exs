@@ -16,10 +16,13 @@ defmodule Hoplon.MixProject do
     [
       app: :hoplon,
       version: "0.3.2",
-      elixir: "~> 1.4",
+      elixir: "~> 1.6",
       package: package(),
       start_permanent: false,
       deps: deps(),
+      elixirc_options: [
+        warnings_as_errors: true
+      ],
       source_url: "https://github.com/nietaki/hoplon",
       docs: docs()
     ]
@@ -35,6 +38,8 @@ defmodule Hoplon.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps() do
     [
+      {:dialyxir, "~> 0.5", only: [:dev, :test], optional: true, runtime: false},
+      {:stream_data, "~> 0.4.2", only: :test},
       {:ex_doc, ">= 0.0.1", only: :dev, optional: true, runtime: false}
     ]
   end
