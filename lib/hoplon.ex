@@ -98,15 +98,21 @@ defmodule Hoplon do
     dep_path = Path.join(project_deps_path, Atom.to_string(package.name))
     result = CheckResult.new(package)
 
-    result =
+    result_tuple =
       with {:ok, result} <- add_git_url(result),
            {:ok, _} <- Hoplon.prepare_repo(result.git_url, repo_path),
            {:ok, result} <- checkout_version(result, repo_path),
            diffs = Hoplon.get_relevant_file_diffs(repo_path, dep_path),
            result = %CheckResult{result | diffs: diffs} do
-        result
-      else
-        {:error, result = %CheckResult{}} ->
+        {:ok, result}
+      end
+
+    # temporary workaround, having it inside the with was hard for dialyzer to comprehend
+    result =
+      case result_tuple do
+        {:ok, result = %CheckResult{}} ->
+          result
+          {:error, result = %CheckResult{}}
           result
       end
 
@@ -118,6 +124,7 @@ defmodule Hoplon do
     end
   end
 
+  @spec add_git_url(%CheckResult{}) :: {:ok, %CheckResult{}} | {:error, %CheckResult{}}
   defp add_git_url(result) do
     case Utils.get_github_git_url(result.hex_package.hex_name) do
       {:ok, git_url} ->
