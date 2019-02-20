@@ -5,8 +5,10 @@ defmodule Hoplon.CryptoTest do
 
   alias Hoplon.Crypto.Records
   alias Hoplon.Crypto
+  require Hoplon.Crypto
 
-  @password 'test'
+  @password "test"
+  @password_charlist 'test'
   # https://crypto.stackexchange.com/a/10825
   @standard_rsa_public_exponent 65537
 
@@ -21,6 +23,44 @@ defmodule Hoplon.CryptoTest do
     expected_key_bit_size = 4096
     assert Math.pow(2, expected_key_bit_size - 1) <= modulus
     assert Math.pow(2, expected_key_bit_size) > modulus
+  end
+
+  test "decoding and encoding a public key pem file without a password" do
+    public_key_pem_file_contents = File.read!("test/assets/public.pem")
+    assert {:ok, public_key} = Crypto.decode_key_from_pem(public_key_pem_file_contents)
+    assert Crypto.is_public_key(public_key)
+    assert {:ok, public_key} == Crypto.decode_key_from_pem(public_key_pem_file_contents, nil)
+
+    assert {:ok, pem_contents} = Crypto.encode_key_to_pem(public_key)
+    assert_same_pem(public_key_pem_file_contents, pem_contents)
+  end
+
+  # pems can differ by a newline character at the end
+  defp assert_same_pem(pem1, pem2) do
+    pem_length = min(String.length(pem1), String.length(pem2))
+    {main1, rest1} = String.split_at(pem1, pem_length)
+    {main2, rest2} = String.split_at(pem2, pem_length)
+
+    assert main1 == main2
+    assert rest1 in ["", "\n"]
+    assert rest2 in ["", "\n"]
+  end
+
+  test "decoding and encoding a private key pem file with a password" do
+    private_key_pem_file_contents = File.read!("test/assets/private.pem")
+
+    assert {:ok, private_key} =
+             Crypto.decode_key_from_pem(private_key_pem_file_contents, @password)
+
+    assert Crypto.is_private_key(private_key)
+
+    assert {:ok, pem_contents} = Crypto.encode_key_to_pem(private_key, @password)
+
+    # they will be differente because of a different salt in the pem entry
+    refute private_key_pem_file_contents == pem_contents
+
+    # but when decoded again the keys will be the same
+    assert {:ok, private_key} == Crypto.decode_key_from_pem(pem_contents, @password)
   end
 
   describe "using `public_key` utilities directly" do
@@ -40,7 +80,7 @@ defmodule Hoplon.CryptoTest do
       assert is_binary(salt)
       assert byte_size(salt) == 8
 
-      rsa_private_key = :public_key.pem_entry_decode(rsa_private_key_entry, @password)
+      rsa_private_key = :public_key.pem_entry_decode(rsa_private_key_entry, @password_charlist)
       assert is_tuple(rsa_private_key)
       assert :RSAPrivateKey = elem(rsa_private_key, 0)
 
