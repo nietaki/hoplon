@@ -1,5 +1,11 @@
 defmodule Hoplon.CryptoTest do
+  alias Hoplon.Error
   use ExUnit.Case
+  use ExUnitProperties
+
+  doctest Hoplon.Crypto
+  doctest Hoplon.Crypto.Records
+
   require Hoplon.Crypto.Records
   require Record
 
@@ -25,11 +31,13 @@ defmodule Hoplon.CryptoTest do
     assert Math.pow(2, expected_key_bit_size) > modulus
   end
 
-  test "decoding and encoding a public key pem file without a password" do
+  test "decoding and encoding a public key pem file" do
     public_key_pem_file_contents = File.read!("test/assets/public.pem")
-    assert {:ok, public_key} = Crypto.decode_key_from_pem(public_key_pem_file_contents)
+    assert {:ok, public_key} = Crypto.decode_public_key_from_pem(public_key_pem_file_contents)
     assert Crypto.is_public_key(public_key)
-    assert {:ok, public_key} == Crypto.decode_key_from_pem(public_key_pem_file_contents, nil)
+
+    # assert {:ok, public_key} = Crypto.decode_private_key_from_pem(public_key_pem_file_contents, "test")
+    # flunk("")
 
     assert {:ok, pem_contents} = Crypto.encode_key_to_pem(public_key)
     assert_same_pem(public_key_pem_file_contents, pem_contents)
@@ -50,7 +58,7 @@ defmodule Hoplon.CryptoTest do
     private_key_pem_file_contents = File.read!("test/assets/private.pem")
 
     assert {:ok, private_key} =
-             Crypto.decode_key_from_pem(private_key_pem_file_contents, @password)
+             Crypto.decode_private_key_from_pem(private_key_pem_file_contents, @password)
 
     assert Crypto.is_private_key(private_key)
 
@@ -60,7 +68,45 @@ defmodule Hoplon.CryptoTest do
     refute private_key_pem_file_contents == pem_contents
 
     # but when decoded again the keys will be the same
-    assert {:ok, private_key} == Crypto.decode_key_from_pem(pem_contents, @password)
+    assert {:ok, private_key} == Crypto.decode_private_key_from_pem(pem_contents, @password)
+  end
+
+  test "trying to decode a private key as if it was a public key errors out" do
+    pem = File.read!("test/assets/private.pem")
+    assert {:error, %Error{code: code}} = Crypto.decode_public_key_from_pem(pem)
+  end
+
+  property "trying to decode a garbage pem errors out neatly" do
+    check all malformed_pem <- string(:ascii),
+              password <- string(:alphanumeric) do
+      assert {:error, %Error{code: code}} = Crypto.decode_public_key_from_pem(malformed_pem)
+      assert code in [:no_valid_pem_entries]
+
+      assert {:error, %Error{code: code}} =
+               Crypto.decode_private_key_from_pem(malformed_pem, password)
+
+      assert code in [:no_valid_pem_entries]
+    end
+  end
+
+  property "trying to decode a pem with an invalid password password errors out neatly" do
+    pem = File.read!("test/assets/private.pem")
+
+    check all password <- string(:alphanumeric),
+              password != @password do
+      assert {:error, %Error{code: code}} = Crypto.decode_private_key_from_pem(pem, password)
+      assert code == :could_not_decode_pem_with_given_password
+    end
+  end
+
+  property "trying to decode a public key as if it was a private key, with a random password errors out neatly" do
+    pem = File.read!("test/assets/public.pem")
+
+    check all password <- string(:alphanumeric),
+              password != "" do
+      assert {:error, %Error{code: code}} = Crypto.decode_private_key_from_pem(pem, password)
+      assert code == :not_a_private_key
+    end
   end
 
   describe "using `public_key` utilities directly" do
