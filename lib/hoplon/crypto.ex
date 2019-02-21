@@ -7,6 +7,10 @@ defmodule Hoplon.Crypto do
   @standard_rsa_public_exponent 65537
   @expected_key_bit_size 4096
 
+  # if the message isn't digested, the signature fails for bigger messages (but not all that huge)
+  @digest_type :sha512
+  @rsa_pk_sign_verify_opts []
+
   alias Hoplon.Error
   require Hoplon.Crypto.Records
   alias Hoplon.Crypto.Records
@@ -135,5 +139,31 @@ defmodule Hoplon.Crypto do
   defp string_or_nil_to_charlist(string) when is_binary(string) do
     # TODO maybe assert the characters are ascii, to prevent compatibility issues?
     String.to_charlist(string)
+  end
+
+  def get_signature(message, private_key)
+      when is_binary(message) and is_private_key(private_key) do
+    :public_key.sign(message, @digest_type, private_key, @rsa_pk_sign_verify_opts)
+  end
+
+  def verify_signature(message, signature, public_key)
+      when is_binary(message) and is_binary(signature) and is_public_key(public_key) do
+    :public_key.verify(message, @digest_type, signature, public_key)
+  end
+
+  @spec hex_encode!(binary()) :: String.t()
+  def hex_encode!(data) when is_binary(data) do
+    Base.encode16(data, case: :lower)
+  end
+
+  @spec hex_decode(String.t()) :: {:ok, binary()} | {:error, Error.t()}
+  def hex_decode(representation) when is_binary(representation) do
+    case Base.decode16(representation, case: :mixed) do
+      {:ok, _} = success ->
+        success
+
+      :error ->
+        {:error, Error.new(:could_not_decode_hex)}
+    end
   end
 end

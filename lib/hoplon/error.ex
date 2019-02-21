@@ -6,6 +6,8 @@ defmodule Hoplon.Error do
     message: nil
   ]
 
+  @type t :: %__MODULE__{}
+
   def new(code, message \\ nil) when is_atom(code) and (is_nil(message) or is_binary(message)) do
     %__MODULE__{
       code: code,

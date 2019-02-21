@@ -18,6 +18,8 @@ defmodule Hoplon.CryptoTest do
   # https://crypto.stackexchange.com/a/10825
   @standard_rsa_public_exponent 65537
 
+  @long_property_test_time_limit_ms 300
+
   test "generate_private_key and generated private key accessors" do
     private_key = Crypto.generate_private_key()
 
@@ -74,6 +76,7 @@ defmodule Hoplon.CryptoTest do
   test "trying to decode a private key as if it was a public key errors out" do
     pem = File.read!("test/assets/private.pem")
     assert {:error, %Error{code: code}} = Crypto.decode_public_key_from_pem(pem)
+    assert code == :not_a_public_key
   end
 
   property "trying to decode a garbage pem errors out neatly" do
@@ -107,6 +110,95 @@ defmodule Hoplon.CryptoTest do
       assert {:error, %Error{code: code}} = Crypto.decode_private_key_from_pem(pem, password)
       assert code == :not_a_private_key
     end
+  end
+
+  property "signing a binary message can be verified using the public key" do
+    check all private_key <- private_key_gen(),
+              message <- message_gen(),
+              max_run_time: @long_property_test_time_limit_ms do
+      public_key = Crypto.build_public_key(private_key)
+      signature = Crypto.get_signature(message, private_key)
+      assert byte_size(signature) == 512
+      assert Crypto.verify_signature(message, signature, public_key)
+    end
+  end
+
+  property "a signature won't be verified if you're using the wrong key" do
+    check all private_key <- private_key_gen(),
+              another_private_key <- private_key_gen(),
+              message <- message_gen(),
+              max_run_time: @long_property_test_time_limit_ms do
+      another_public_key = Crypto.build_public_key(another_private_key)
+      signature = Crypto.get_signature(message, private_key)
+      refute Crypto.verify_signature(message, signature, another_public_key)
+    end
+  end
+
+  property "any binary can be hex encoded and decoded" do
+    check all data <- binary() do
+      hex = Crypto.hex_encode!(data)
+      assert {:ok, data} == Crypto.hex_decode(hex)
+      assert byte_size(hex) == byte_size(data) * 2
+    end
+  end
+
+  property "decoding of hex allows for both lower and upercase encoding" do
+    check all data <- binary() do
+      hex = Crypto.hex_encode!(data)
+      assert {:ok, data} == Crypto.hex_decode(String.downcase(hex))
+      assert {:ok, data} == Crypto.hex_decode(String.upcase(hex))
+    end
+  end
+
+  test "trying to decode an invalid hex string returns a good error" do
+    assert {:error, %Error{code: :could_not_decode_hex}} = Crypto.hex_decode("foobar")
+  end
+
+  test "hex signature aligns with the one obtained through openssl" do
+    # NOTE: message.sig.hex was obtained as follows:
+    # $ openssl pkeyutl -sign -in message.digest -inkey private.pem -hexdump -out message.sig.hex -pkeyopt digest:sha512
+
+    private_key_pem_file_contents = File.read!("test/assets/private.pem")
+
+    assert {:ok, private_key} =
+             Crypto.decode_private_key_from_pem(private_key_pem_file_contents, @password)
+
+    message = File.read!("test/assets/message.txt")
+
+    hoplon_signature_hex =
+      Crypto.get_signature(message, private_key)
+      |> Crypto.hex_encode!()
+
+    # The file is in the following format:
+    #
+    # 0000 - 7b 14 14 4e d2 c0 e5 84-91 ae 9a 35 66 e5 f7 90   {..N.......5f...
+    # 0010 - 01 d3 76 fb a6 e6 5e 0a-90 94 9a 60 c7 7b 0e 2d   ..v...^....`.{.-
+    # 0020 - 36 dd 16 05 e1 95 65 61-58 a8 94 b9 75 13 6b c8   6.....eaX...u.k.
+    openssh_signature_hex =
+      File.read!("test/assets/message.sig.hex")
+      |> String.split("\n")
+      |> Enum.map(fn line ->
+        line
+        |> String.slice(7..54)
+        |> String.replace([" ", "-"], "")
+      end)
+      |> Enum.join("")
+
+    assert hoplon_signature_hex == openssh_signature_hex
+  end
+
+  ### StreamData generators
+
+  def private_key_gen() do
+    StreamData.binary()
+    |> StreamData.map(fn _ ->
+      Crypto.generate_private_key()
+    end)
+    |> StreamData.unshrinkable()
+  end
+
+  def message_gen() do
+    StreamData.binary(min_length: 13)
   end
 
   describe "using `public_key` utilities directly" do
