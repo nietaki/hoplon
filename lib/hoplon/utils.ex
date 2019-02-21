@@ -101,10 +101,9 @@ defmodule Hoplon.Utils do
           []
 
         true ->
-          {map, _} = Code.eval_file(mix_lock_path)
-
           res =
-            map
+            mix_lock_path
+            |> eval_lockfile()
             |> Enum.flat_map(fn {name, spec} -> Hoplon.HexPackage.maybe_new(name, spec) end)
 
           {:ok, res}
@@ -193,5 +192,15 @@ defmodule Hoplon.Utils do
 
   defp cast_cmd_result({result_text, status_code}) do
     {:error, {result_text, status_code}}
+  end
+
+  defp eval_lockfile(lockfile) do
+    opts = [file: lockfile, warn_on_unnecessary_quotes: false]
+
+    with {:ok, contents} = File.read(lockfile),
+         {:ok, quoted} = Code.string_to_quoted(contents, opts),
+         {%{} = lock, _binding} = Code.eval_quoted(quoted, opts) do
+      lock
+    end
   end
 end
