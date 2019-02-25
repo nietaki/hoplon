@@ -187,6 +187,36 @@ defmodule Hoplon.CryptoTest do
     assert hoplon_signature_hex == openssh_signature_hex
   end
 
+  test "getting public key fingerprint" do
+    # $ openssl rsa -in public.pem -pubin -pubout -outform DER | openssl md5 -c
+    # writing RSA key
+    # 33:3d:09:0e:e1:82:4f:61:6e:a2:11:79:a3:f1:46:c7
+    #
+    # $ openssl rsa -in public.pem -pubin -pubout -outform DER | openssl md5
+    # writing RSA key
+    # 333d090ee1824f616ea21179a3f146c7
+    #
+    # $ openssl rsa -in public.pem -pubin -pubout -outform DER | openssl sha256
+    # writing RSA key
+    # e002c6fe18f1f3645f96cd9a73b7163ea0cd799d170f72d15679422b71d35606
+    # $ openssl rsa -in public.pem -pubin -pubout -outform DER | openssl sha512
+    # writing RSA key
+    # df4724b5a64b86282861ad4cd3d32eb798542fe37149de33b54168230dbc8f03e04cbf45da8a58db39ff278419a9f72fb7edfd889738b8dd1464fe611e189883
+
+    md5_hash = "333d090ee1824f616ea21179a3f146c7"
+    sha256_hash = "e002c6fe18f1f3645f96cd9a73b7163ea0cd799d170f72d15679422b71d35606"
+
+    sha512_hash =
+      "df4724b5a64b86282861ad4cd3d32eb798542fe37149de33b54168230dbc8f03e04cbf45da8a58db39ff278419a9f72fb7edfd889738b8dd1464fe611e189883"
+
+    public_key_pem = File.read!("test/assets/public.pem")
+    assert {:ok, public_key} = Crypto.decode_public_key_from_pem(public_key_pem)
+
+    assert md5_hash == Crypto.get_fingerprint(public_key, :md5)
+    assert sha256_hash == Crypto.get_fingerprint(public_key, :sha256)
+    assert sha512_hash == Crypto.get_fingerprint(public_key, :sha512)
+  end
+
   ### StreamData generators
 
   def private_key_gen() do
@@ -204,7 +234,7 @@ defmodule Hoplon.CryptoTest do
   describe "using `public_key` utilities directly" do
     test "interacting with pem keys generated using openssl" do
       # the keys were generated using the following commands:
-      # $ openssl genrsa -des3 -out private.pem 2048
+      # $ openssl genrsa -des3 -out private.pem 4096
       # using "test" as the password
       # $ openssl rsa -in private.pem -outform PEM -pubout -out public.pem
 

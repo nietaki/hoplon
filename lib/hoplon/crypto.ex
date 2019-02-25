@@ -166,4 +166,30 @@ defmodule Hoplon.Crypto do
         {:error, Error.new(:could_not_decode_hex)}
     end
   end
+
+  def get_fingerprint(public_key, digest_type \\ :sha256)
+      when is_public_key(public_key) and digest_type in [:md5, :sha256, :sha512] do
+    # NOTE: it seems like doing this directly through :public_key isn't possible/easy.
+    #
+    # This is a bit of a workaround to encode the public key to DER format
+    # the same way openssl would (and in the analogous way :public_key does for PEM)
+    # encoding.
+    inner_der = :public_key.der_encode(:RSAPublicKey, public_key)
+
+    # SEE https://github.com/erlang/otp/blob/3058ef6bb7a2a3f96cfde819976ee7a52be65364/lib/public_key/src/public_key.erl#L130
+    der_null = <<5, 0>>
+
+    # SEE https://github.com/erlang/otp/blob/709d0482af92ca52d26296f008b495a36161ca00/lib/public_key/asn1/PKCS-1.asn1#L22
+    rsa_encryption_identifier = {1, 2, 840, 113_549, 1, 1, 1}
+
+    # SEE https://github.com/erlang/otp/blob/3058ef6bb7a2a3f96cfde819976ee7a52be65364/lib/public_key/src/public_key.erl#L211-L215
+    spki =
+      {:SubjectPublicKeyInfo, {:AlgorithmIdentifier, rsa_encryption_identifier, der_null},
+       inner_der}
+
+    der = :public_key.der_encode(:SubjectPublicKeyInfo, spki)
+
+    :crypto.hash(digest_type, der)
+    |> Base.encode16(case: :lower)
+  end
 end
