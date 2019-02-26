@@ -12,13 +12,56 @@ defmodule Hoplon.CryptoTest do
   alias Hoplon.Crypto.Records
   alias Hoplon.Crypto
   require Hoplon.Crypto
+  require Logger
 
   @password "test"
-  @password_charlist 'test'
+
   # https://crypto.stackexchange.com/a/10825
   @standard_rsa_public_exponent 65537
 
   @long_property_test_time_limit_ms 300
+
+  @tmp_dir "test/tmp/"
+  @private_key_file @tmp_dir <> "private.pem"
+  @public_key_file @tmp_dir <> "public.pem"
+  @message_file "test/assets/message.txt"
+
+  @pkey_bit_size_string "4096"
+
+  setup_all do
+    if !File.exists?(@private_key_file) do
+      Logger.info("Lazily generating private and public key files")
+
+      openssl_opts = [
+        "genrsa",
+        "-passout",
+        "pass:#{@password}",
+        "-des3",
+        "-out",
+        @private_key_file,
+        @pkey_bit_size_string
+      ]
+
+      openssl(openssl_opts)
+
+      openssl_opts = [
+        "rsa",
+        "-passin",
+        "pass:#{@password}",
+        "-in",
+        @private_key_file,
+        "-outform",
+        "PEM",
+        "-pubout",
+        "-out",
+        @public_key_file
+      ]
+
+      openssl(openssl_opts)
+    end
+
+    :ok
+  end
 
   test "generate_private_key and generated private key accessors" do
     private_key = Crypto.generate_private_key()
@@ -34,12 +77,9 @@ defmodule Hoplon.CryptoTest do
   end
 
   test "decoding and encoding a public key pem file" do
-    public_key_pem_file_contents = File.read!("test/assets/public.pem")
+    public_key_pem_file_contents = File.read!(@public_key_file)
     assert {:ok, public_key} = Crypto.decode_public_key_from_pem(public_key_pem_file_contents)
     assert Crypto.is_public_key(public_key)
-
-    # assert {:ok, public_key} = Crypto.decode_private_key_from_pem(public_key_pem_file_contents, "test")
-    # flunk("")
 
     assert {:ok, pem_contents} = Crypto.encode_key_to_pem(public_key)
     assert_same_pem(public_key_pem_file_contents, pem_contents)
@@ -57,7 +97,7 @@ defmodule Hoplon.CryptoTest do
   end
 
   test "decoding and encoding a private key pem file with a password" do
-    private_key_pem_file_contents = File.read!("test/assets/private.pem")
+    private_key_pem_file_contents = File.read!(@private_key_file)
 
     assert {:ok, private_key} =
              Crypto.decode_private_key_from_pem(private_key_pem_file_contents, @password)
@@ -74,7 +114,7 @@ defmodule Hoplon.CryptoTest do
   end
 
   test "trying to decode a private key as if it was a public key errors out" do
-    pem = File.read!("test/assets/private.pem")
+    pem = File.read!(@private_key_file)
     assert {:error, %Error{code: code}} = Crypto.decode_public_key_from_pem(pem)
     assert code == :not_a_public_key
   end
@@ -93,7 +133,7 @@ defmodule Hoplon.CryptoTest do
   end
 
   property "trying to decode a pem with an invalid password password errors out neatly" do
-    pem = File.read!("test/assets/private.pem")
+    pem = File.read!(@private_key_file)
 
     check all password <- string(:alphanumeric),
               password != @password do
@@ -103,7 +143,7 @@ defmodule Hoplon.CryptoTest do
   end
 
   property "trying to decode a public key as if it was a private key, with a random password errors out neatly" do
-    pem = File.read!("test/assets/public.pem")
+    pem = File.read!(@public_key_file)
 
     check all password <- string(:alphanumeric),
               password != "" do
@@ -155,15 +195,46 @@ defmodule Hoplon.CryptoTest do
   end
 
   test "hex signature aligns with the one obtained through openssl" do
+    openssl_digest_file = @tmp_dir <> "message.digest"
+    openssl_signature_file = @tmp_dir <> "message.sig.hex"
+
+    # openssl dgst -sha512 -binary message.txt > message.digest
+    openssl_opts = [
+      "dgst",
+      "-sha512",
+      "-binary",
+      @message_file
+    ]
+
+    binary_digest = openssl(openssl_opts)
+    File.write!(openssl_digest_file, binary_digest, [:write])
+
     # NOTE: message.sig.hex was obtained as follows:
     # $ openssl pkeyutl -sign -in message.digest -inkey private.pem -hexdump -out message.sig.hex -pkeyopt digest:sha512
+    openssl_opts = [
+      "pkeyutl",
+      "-sign",
+      "-in",
+      openssl_digest_file,
+      "-passin",
+      "pass:#{@password}",
+      "-inkey",
+      @private_key_file,
+      "-hexdump",
+      "-out",
+      openssl_signature_file,
+      "-pkeyopt",
+      "digest:sha512"
+    ]
 
-    private_key_pem_file_contents = File.read!("test/assets/private.pem")
+    openssl(openssl_opts)
+
+    private_key_pem_file_contents = File.read!(@private_key_file)
 
     assert {:ok, private_key} =
              Crypto.decode_private_key_from_pem(private_key_pem_file_contents, @password)
 
-    message = File.read!("test/assets/message.txt")
+    message = File.read!(@message_file)
 
     hoplon_signature_hex =
       Crypto.get_signature(message, private_key)
@@ -175,7 +246,7 @@ defmodule Hoplon.CryptoTest do
     # 0010 - 01 d3 76 fb a6 e6 5e 0a-90 94 9a 60 c7 7b 0e 2d   ..v...^....`.{.-
     # 0020 - 36 dd 16 05 e1 95 65 61-58 a8 94 b9 75 13 6b c8   6.....eaX...u.k.
     openssh_signature_hex =
-      File.read!("test/assets/message.sig.hex")
+      File.read!(openssl_signature_file)
       |> String.split("\n")
       |> Enum.map(fn line ->
         line
@@ -188,33 +259,47 @@ defmodule Hoplon.CryptoTest do
   end
 
   test "getting public key fingerprint" do
-    # $ openssl rsa -in public.pem -pubin -pubout -outform DER | openssl md5 -c
-    # writing RSA key
-    # 33:3d:09:0e:e1:82:4f:61:6e:a2:11:79:a3:f1:46:c7
-    #
-    # $ openssl rsa -in public.pem -pubin -pubout -outform DER | openssl md5
-    # writing RSA key
-    # 333d090ee1824f616ea21179a3f146c7
-    #
-    # $ openssl rsa -in public.pem -pubin -pubout -outform DER | openssl sha256
-    # writing RSA key
-    # e002c6fe18f1f3645f96cd9a73b7163ea0cd799d170f72d15679422b71d35606
-    # $ openssl rsa -in public.pem -pubin -pubout -outform DER | openssl sha512
-    # writing RSA key
-    # df4724b5a64b86282861ad4cd3d32eb798542fe37149de33b54168230dbc8f03e04cbf45da8a58db39ff278419a9f72fb7edfd889738b8dd1464fe611e189883
+    openssl_opts = [
+      "rsa",
+      "-in",
+      @public_key_file,
+      "-pubin",
+      "-pubout",
+      "-outform",
+      "DER"
+    ]
 
-    md5_hash = "333d090ee1824f616ea21179a3f146c7"
-    sha256_hash = "e002c6fe18f1f3645f96cd9a73b7163ea0cd799d170f72d15679422b71d35606"
+    public_key_der_binary = openssl(openssl_opts)
+    public_key_der_file = @tmp_dir <> "public.der"
+    File.write!(public_key_der_file, public_key_der_binary, [:write])
+
+    extract_hash = fn string ->
+      regex = ~r/[0-9a-f]{30,}/
+      assert [[hash]] = Regex.scan(regex, string)
+      hash
+    end
+
+    md5_hash =
+      openssl(["dgst", "-md5", public_key_der_file])
+      |> extract_hash.()
+
+    sha256_hash =
+      openssl(["dgst", "-sha256", public_key_der_file])
+      |> extract_hash.()
 
     sha512_hash =
-      "df4724b5a64b86282861ad4cd3d32eb798542fe37149de33b54168230dbc8f03e04cbf45da8a58db39ff278419a9f72fb7edfd889738b8dd1464fe611e189883"
+      openssl(["dgst", "-sha512", public_key_der_file])
+      |> extract_hash.()
 
-    public_key_pem = File.read!("test/assets/public.pem")
+    public_key_pem = File.read!(@public_key_file)
     assert {:ok, public_key} = Crypto.decode_public_key_from_pem(public_key_pem)
 
     assert md5_hash == Crypto.get_fingerprint(public_key, :md5)
+    assert String.length(md5_hash) == 32
     assert sha256_hash == Crypto.get_fingerprint(public_key, :sha256)
+    assert String.length(sha256_hash) == 64
     assert sha512_hash == Crypto.get_fingerprint(public_key, :sha512)
+    assert String.length(sha512_hash) == 128
   end
 
   ### StreamData generators
@@ -231,123 +316,8 @@ defmodule Hoplon.CryptoTest do
     StreamData.binary(min_length: 13)
   end
 
-  describe "using `public_key` utilities directly" do
-    test "interacting with pem keys generated using openssl" do
-      # the keys were generated using the following commands:
-      # $ openssl genrsa -des3 -out private.pem 4096
-      # using "test" as the password
-      # $ openssl rsa -in private.pem -outform PEM -pubout -out public.pem
-
-      private_key_pem_file_contents = File.read!("test/assets/private.pem")
-      entries = :public_key.pem_decode(private_key_pem_file_contents)
-      assert [rsa_private_key_entry] = entries
-
-      assert {:RSAPrivateKey, encrypted_der, cipher_info} = rsa_private_key_entry
-      assert is_binary(encrypted_der)
-      assert {'DES-EDE3-CBC', salt} = cipher_info
-      assert is_binary(salt)
-      assert byte_size(salt) == 8
-
-      rsa_private_key = :public_key.pem_entry_decode(rsa_private_key_entry, @password_charlist)
-      assert is_tuple(rsa_private_key)
-      assert :RSAPrivateKey = elem(rsa_private_key, 0)
-
-      assert is_integer(Hoplon.Crypto.Records.rsa_private_key(rsa_private_key, :modulus))
-
-      # public key
-      public_key_pem_file_contents = File.read!("test/assets/public.pem")
-      entries = :public_key.pem_decode(public_key_pem_file_contents)
-      assert [rsa_public_key_entry] = entries
-
-      assert {:SubjectPublicKeyInfo, _der, :not_encrypted} = rsa_public_key_entry
-      assert is_binary(salt)
-      assert byte_size(salt) == 8
-
-      rsa_public_key = :public_key.pem_entry_decode(rsa_public_key_entry)
-      assert is_tuple(rsa_public_key)
-      assert :RSAPublicKey = elem(rsa_public_key, 0)
-
-      assert is_integer(Hoplon.Crypto.Records.rsa_public_key(rsa_public_key, :modulus))
-
-      public_exponent = Hoplon.Crypto.Records.rsa_private_key(rsa_private_key, :publicExponent)
-      assert public_exponent == @standard_rsa_public_exponent
-      modulus = Hoplon.Crypto.Records.rsa_private_key(rsa_private_key, :modulus)
-
-      assert rsa_public_key ==
-               Hoplon.Crypto.Records.rsa_public_key(
-                 publicExponent: public_exponent,
-                 modulus: modulus
-               )
-    end
-
-    test "generating new RSA key pair" do
-      size = 2048
-      rsa_private_key = :public_key.generate_key({:rsa, size, @standard_rsa_public_exponent})
-      assert Record.is_record(rsa_private_key)
-      modulus = Hoplon.Crypto.Records.rsa_private_key(rsa_private_key, :modulus)
-
-      # logarithms on big numbers are hard for erlang
-      assert Math.pow(2, size - 1) <= modulus
-      assert Math.pow(2, size) > modulus
-    end
-
-    test "signing and verifying a signature" do
-      size = 2048
-      rsa_private_key = :public_key.generate_key({:rsa, size, @standard_rsa_public_exponent})
-      public_exponent = Hoplon.Crypto.Records.rsa_private_key(rsa_private_key, :publicExponent)
-      modulus = Hoplon.Crypto.Records.rsa_private_key(rsa_private_key, :modulus)
-
-      message = "I'm an arbitrary binary message that happens to be an ascii string! "
-      message = String.duplicate(message, 100)
-
-      # if the message isn't digested, the signature fails for bigger messages (but not all that huge)
-      digest_type = :sha512
-      rsa_pk_sign_verify_opts = []
-
-      # this is a plain binary, not base64 encoded
-      signature = :public_key.sign(message, digest_type, rsa_private_key, rsa_pk_sign_verify_opts)
-
-      rsa_public_key =
-        Hoplon.Crypto.Records.rsa_public_key(publicExponent: public_exponent, modulus: modulus)
-
-      assert :public_key.verify(
-               message,
-               digest_type,
-               signature,
-               rsa_public_key,
-               rsa_pk_sign_verify_opts
-             )
-
-      assert :public_key.verify(message, digest_type, signature, rsa_public_key)
-
-      refute :public_key.verify(message <> "x", digest_type, signature, rsa_public_key)
-      refute :public_key.verify(message, :sha, signature, rsa_public_key)
-      # TODO tests for other cases that shouldn't succeed, once we start using StreamData
-    end
-
-    test "verifying a signature from openssh pkeyutl" do
-      # commands used:
-      # $ openssl dgst -sha512 -binary message.txt > message.digest
-      # $ openssl pkeyutl -sign -in message.digest -inkey private.pem -out message.sig -pkeyopt digest:sha512
-
-      public_key_pem_file_contents = File.read!("test/assets/public.pem")
-      [rsa_public_key_entry] = :public_key.pem_decode(public_key_pem_file_contents)
-      rsa_public_key = :public_key.pem_entry_decode(rsa_public_key_entry)
-
-      # Note, usually the signatures would be encoded in hex, which is something we will do, TODO
-      original_message = File.read!("test/assets/message.txt")
-      openssl_signature = File.read!("test/assets/message.sig")
-
-      assert :public_key.verify(original_message, :sha512, openssl_signature, rsa_public_key)
-
-      refute :public_key.verify(
-               original_message <> "x",
-               :sha512,
-               openssl_signature,
-               rsa_public_key
-             )
-
-      refute :public_key.verify(original_message, :sha, openssl_signature, rsa_public_key)
-    end
+  defp openssl(openssl_opts) do
+    assert {output, 0} = System.cmd("openssl", openssl_opts)
+    output
   end
 end
