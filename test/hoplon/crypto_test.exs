@@ -198,7 +198,6 @@ defmodule Hoplon.CryptoTest do
     openssl_digest_file = @tmp_dir <> "message.digest"
     openssl_signature_file = @tmp_dir <> "message.sig.hex"
 
-    # openssl dgst -sha512 -binary message.txt > message.digest
     openssl_opts = [
       "dgst",
       "-sha512",
@@ -209,8 +208,6 @@ defmodule Hoplon.CryptoTest do
     binary_digest = openssl(openssl_opts)
     File.write!(openssl_digest_file, binary_digest, [:write])
 
-    # NOTE: message.sig.hex was obtained as follows:
-    # $ openssl pkeyutl -sign -in message.digest -inkey private.pem -hexdump -out message.sig.hex -pkeyopt digest:sha512
     openssl_opts = [
       "pkeyutl",
       "-sign",
