@@ -151,7 +151,8 @@ defmodule Hoplon do
 
   defp get_repo_subpath(git_url) do
     {user, repo} = Utils.get_user_and_repo_name(git_url)
-    Path.join(user, repo)
+    subpath = Path.join(user, repo)
+    String.replace(subpath, ~r/[^a-zA-Z0-9_\/-]/, "_")
   end
 
   defp add_git_url(result) do
