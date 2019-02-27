@@ -46,7 +46,7 @@ defmodule Hoplon.MixProject do
     [
       {:dialyxir, "~> 1.0.0-rc4", only: [:dev, :test], optional: true, runtime: false},
       {:stream_data, "~> 0.4.2", only: :test},
-      {:ex_doc, ">= 0.0.1", only: :dev, optional: true, runtime: false}
+      {:ex_doc, ">= 0.0.1", only: [:dev, :test], optional: true, runtime: false}
     ]
   end
 

@@ -74,4 +74,9 @@ defmodule Hoplon.UtilsTest do
     assert naive_pow(42, 0) == 1
     assert naive_pow(2, 10) == 1024
   end
+
+  test "get_user_and_repo_name from github url" do
+    url = "https://github.com/elixir-lang/ex_doc.git"
+    assert {"elixir-lang", "ex_doc"} == get_user_and_repo_name(url)
+  end
 end
