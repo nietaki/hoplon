@@ -26,9 +26,6 @@ defmodule Mix.Tasks.Hoplon.Check do
   the repository, the task will exit with a non-zero code.
   """
 
-  # TODO dehardcode this
-  @git_parent_directory "/tmp/hoplon_repos"
-
   @doc "Runs the task"
   def run(_args) do
     with {:ok, _} <- Hoplon.check_required_programs(),
@@ -48,7 +45,7 @@ defmodule Mix.Tasks.Hoplon.Check do
       results =
         Enum.map(relevant_packages, fn package ->
           Task.async(fn ->
-            Hoplon.check_package(package, @git_parent_directory, lockfile)
+            Hoplon.check_package(package, Utils.get_repos_parent_path(), lockfile)
           end)
         end)
         |> Stream.map(fn task ->

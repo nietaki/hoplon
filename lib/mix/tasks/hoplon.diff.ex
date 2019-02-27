@@ -32,21 +32,20 @@ defmodule Mix.Tasks.Hoplon.Diff do
   do differ, the task will exit with a non-zero code.
   """
 
-  # TODO dehardcode this
-  @git_parent_directory "/tmp/hoplon_repos"
-
   @doc "Runs the task"
   def run([package_name | additional_args]) do
+    repos_parent_directory = Utils.get_repos_parent_path()
+
     with {:ok, _} <- Hoplon.check_required_programs(),
          {:ok, hex_packages} <- Utils.get_packages_from_mix_lock(),
          {:ok, package} <- choose_hex_package(hex_packages, package_name),
          {:ok, project_deps_path} <- Utils.get_project_deps_path(),
          {:ok, hoplon_lock_path} <- Utils.get_hoplon_lock_path(),
          # FIXME a good amount of code below is duplicated and it shouldn't depend on CheckResult
-         repo_path = Path.join(@git_parent_directory, Atom.to_string(package.name)),
+         repo_path = Path.join(repos_parent_directory, Atom.to_string(package.name)),
          dep_path = Path.join(project_deps_path, Atom.to_string(package.name)),
          lockfile = Lockfile.read!(hoplon_lock_path),
-         result = Hoplon.check_package(package, @git_parent_directory, lockfile) do
+         result = Hoplon.check_package(package, repos_parent_directory, lockfile) do
       case result do
         %CheckResult{git_url: nil} ->
           Utils.task_exit(11, "could not find package's github repo")

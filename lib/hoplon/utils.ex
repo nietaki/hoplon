@@ -3,6 +3,11 @@ defmodule Hoplon.Utils do
 
   def github_regex(), do: ~r|^https://github.com/[\w_.-]+/[\w_.-]+|
 
+  def get_repos_parent_path() do
+    # TODO make it customizable using ENV_VARs or opts
+    Path.join([System.user_home!(), ".hoplon/repos"])
+  end
+
   def get_project() do
     case Mix.Project.get() do
       nil ->
@@ -194,6 +199,11 @@ defmodule Hoplon.Utils do
 
   defp do_naive_pow(base, remaining_times, accumulator) when remaining_times > 0 do
     do_naive_pow(base, remaining_times - 1, accumulator * base)
+  end
+
+  def get_user_and_repo_name(github_url) do
+    [_whole, user, repo_name] = Regex.run(~r{github.com/([^/]+)/([^/]+).git$}, github_url)
+    {user, repo_name}
   end
 
   # ===========================================================================

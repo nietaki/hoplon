@@ -8,8 +8,12 @@ defmodule Hoplon do
   alias Hoplon.CheckResult
   alias Hoplon.Lockfile
 
-  @program_dependencies ["git", "diff", "elixir"]
+  @program_dependencies ["git", "diff", "elixir", "openssl"]
 
+  @doc """
+  checks if the host machine has access to the command line utilities
+  Hoplon uses under the hood
+  """
   def check_required_programs() do
     missing_programs =
       @program_dependencies
@@ -21,6 +25,12 @@ defmodule Hoplon do
     end
   end
 
+  @doc """
+  Creates a fresh clone of the given repository under the given path.
+
+  If the local repository already exists, it tries to return it to a clean
+  state, in case it was, for example, in the middle of a bisect operation.
+  """
   def prepare_repo(git_url, path) do
     with {:ok, _} <- Git.ensure_repo(git_url, path),
          {:ok, _} <- Git.bisect_reset(path),
@@ -32,6 +42,10 @@ defmodule Hoplon do
     end
   end
 
+  @doc """
+  Attempts to check out the tag corresponding to the provided version
+  in the git repository in the provided directory.
+  """
   def checkout_version_by_tag(version, cd_path) do
     case Git.attempt_checkout(version, cd_path) do
       success = {:ok, _} ->
@@ -42,6 +56,10 @@ defmodule Hoplon do
     end
   end
 
+  @doc """
+  Given a version and a directory containing a git repository,
+  attempts to find the first commit where the Elixir project is in the version.
+  """
   def checkout_version_by_git_bisect(version, cd_path) do
     version_checker_path = Path.join(__DIR__, "../scripts/project_version_checker.exs")
     # NOTE assumptions here
@@ -92,14 +110,20 @@ defmodule Hoplon do
     end
   end
 
+  @doc """
+  Given the hex package description, the directory where the cloned dependency repos
+  are supposed to be and the lockfile struct containing absolved packages, checks
+  the package for honesty.
+  """
   def check_package(package = %HexPackage{}, git_parent_directory, lf = %Lockfile{}) do
     {:ok, project_deps_path} = Utils.get_project_deps_path()
-    repo_path = Path.join(git_parent_directory, Atom.to_string(package.name))
     dep_path = Path.join(project_deps_path, Atom.to_string(package.name))
     result = CheckResult.new(package)
 
     result_tuple =
       with {:ok, result} <- add_git_url(result),
+           repo_subpath = get_repo_subpath(result.git_url),
+           repo_path = Path.join(git_parent_directory, repo_subpath),
            {:ok, _} <- Hoplon.prepare_repo(result.git_url, repo_path),
            {:ok, result} <- checkout_version(result, repo_path),
            diffs = Hoplon.get_relevant_file_diffs(repo_path, dep_path),
@@ -123,6 +147,12 @@ defmodule Hoplon do
       nil -> result
       msg when is_binary(msg) -> %CheckResult{result | absolution_message: msg}
     end
+  end
+
+  defp get_repo_subpath(git_url) do
+    {user, repo} = Utils.get_user_and_repo_name(git_url)
+    subpath = Path.join(user, repo)
+    String.replace(subpath, ~r/[^a-zA-Z0-9_\/-]/, "_")
   end
 
   defp add_git_url(result) do
