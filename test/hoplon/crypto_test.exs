@@ -72,8 +72,8 @@ defmodule Hoplon.CryptoTest do
     modulus = Records.rsa_private_key(private_key, :modulus)
 
     expected_key_bit_size = 4096
-    assert Math.pow(2, expected_key_bit_size - 1) <= modulus
-    assert Math.pow(2, expected_key_bit_size) > modulus
+    assert naive_pow(2, expected_key_bit_size - 1) <= modulus
+    assert naive_pow(2, expected_key_bit_size) > modulus
   end
 
   test "decoding and encoding a public key pem file" do
@@ -81,8 +81,25 @@ defmodule Hoplon.CryptoTest do
     assert {:ok, public_key} = Crypto.decode_public_key_from_pem(public_key_pem_file_contents)
     assert Crypto.is_public_key(public_key)
 
-    assert {:ok, pem_contents} = Crypto.encode_key_to_pem(public_key)
+    assert {:ok, pem_contents} = Crypto.encode_public_key_to_pem(public_key)
     assert_same_pem(public_key_pem_file_contents, pem_contents)
+  end
+
+  @tag :current
+  test "you can't use a non-ascii character in a private key password" do
+    private_key_pem_file_contents = File.read!(@private_key_file)
+
+    assert {:ok, private_key} =
+             Crypto.decode_private_key_from_pem(private_key_pem_file_contents, @password)
+
+    assert {:error, error} = Crypto.encode_private_key_to_pem(private_key, "żółć")
+    assert %Error{code: :password_must_be_printable_ascii} = error
+
+    assert {:error, error} = Crypto.encode_private_key_to_pem(private_key, "\u0065\u0301")
+    assert %Error{code: :password_must_be_printable_ascii} = error
+
+    assert {:error, error} = Crypto.encode_private_key_to_pem(private_key, "éeeeee")
+    assert %Error{code: :password_must_be_printable_ascii} = error
   end
 
   # pems can differ by a newline character at the end
@@ -104,7 +121,7 @@ defmodule Hoplon.CryptoTest do
 
     assert Crypto.is_private_key(private_key)
 
-    assert {:ok, pem_contents} = Crypto.encode_key_to_pem(private_key, @password)
+    assert {:ok, pem_contents} = Crypto.encode_private_key_to_pem(private_key, @password)
 
     # they will be differente because of a different salt in the pem entry
     refute private_key_pem_file_contents == pem_contents
@@ -316,5 +333,26 @@ defmodule Hoplon.CryptoTest do
   defp openssl(openssl_opts) do
     assert {output, 0} = System.cmd("openssl", openssl_opts)
     output
+  end
+
+  test "naive_pow is correct" do
+    assert naive_pow(3, 2) == 9
+    assert naive_pow(5, 1) == 5
+    assert naive_pow(42, 0) == 1
+    assert naive_pow(2, 10) == 1024
+  end
+
+  def naive_pow(base, exponent) when exponent >= 0 do
+    do_naive_pow(base, exponent)
+  end
+
+  defp do_naive_pow(base, remaining_times, accumulator \\ 1)
+
+  defp do_naive_pow(_base, 0, accumulator) do
+    accumulator
+  end
+
+  defp do_naive_pow(base, remaining_times, accumulator) when remaining_times > 0 do
+    do_naive_pow(base, remaining_times - 1, accumulator * base)
   end
 end

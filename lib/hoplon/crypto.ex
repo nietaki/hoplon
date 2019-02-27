@@ -34,11 +34,12 @@ defmodule Hoplon.Crypto do
     Records.rsa_public_key(publicExponent: public_exponent, modulus: modulus)
   end
 
+  @spec decode_private_key_from_pem(binary(), binary()) ::
+          {:ok, Records.rsa_private_key()} | {:error, Error.t()}
   def decode_private_key_from_pem(pem_contents, password)
       when is_binary(pem_contents) and is_binary(password) do
-    password = string_or_nil_to_charlist(password)
-
-    with {:ok, only_entry} <- get_the_only_pem_entry(pem_contents),
+    with {:ok, password} <- string_to_charlist(password),
+         {:ok, only_entry} <- get_the_only_pem_entry(pem_contents),
          {:ok, ^only_entry} <- ensure_is_private_key_pem_entry(only_entry) do
       try do
         key = :public_key.pem_entry_decode(only_entry, password)
@@ -64,6 +65,8 @@ defmodule Hoplon.Crypto do
     end
   end
 
+  @spec decode_public_key_from_pem(binary()) ::
+          {:ok, Records.rsa_public_key()} | {:error, Error.t()}
   def decode_public_key_from_pem(pem_contents) when is_binary(pem_contents) do
     with {:ok, public_key_entry} <- get_the_only_pem_entry(pem_contents),
          {:ok, ^public_key_entry} <- ensure_is_public_key_pem_entry(public_key_entry) do
@@ -103,49 +106,50 @@ defmodule Hoplon.Crypto do
     end
   end
 
-  def encode_key_to_pem(key, password \\ nil)
-      when is_public_key(key) or
-             (is_private_key(key) and (is_nil(password) or is_binary(password))) do
-    password = string_or_nil_to_charlist(password)
+  @spec encode_public_key_to_pem(Records.rsa_public_key()) :: {:ok, binary()}
+  def encode_public_key_to_pem(key) when is_public_key(key) do
+    asn1_type = :SubjectPublicKeyInfo
 
-    asn1_type =
-      case elem(key, 0) do
-        :RSAPrivateKey ->
-          :RSAPrivateKey
-
-        :RSAPublicKey ->
-          :SubjectPublicKeyInfo
-      end
-
-    entry =
-      case password do
-        nil ->
-          :public_key.pem_entry_encode(asn1_type, key)
-
-        password ->
-          salt = :crypto.strong_rand_bytes(8)
-          cipher_info = {'DES-EDE3-CBC', salt}
-          :public_key.pem_entry_encode(asn1_type, key, {cipher_info, password})
-      end
-
+    entry = :public_key.pem_entry_encode(asn1_type, key)
     pem_contents = :public_key.pem_encode([entry])
     {:ok, pem_contents}
   end
 
-  defp string_or_nil_to_charlist(nil) do
-    nil
+  @spec encode_private_key_to_pem(Records.rsa_private_key(), String.t()) :: {:ok, binary()}
+  def encode_private_key_to_pem(key, password) when is_private_key(key) and is_binary(password) do
+    with {:ok, password} <- string_to_charlist(password) do
+      asn1_type = :RSAPrivateKey
+      salt = :crypto.strong_rand_bytes(8)
+      cipher_info = {'DES-EDE3-CBC', salt}
+
+      entry = :public_key.pem_entry_encode(asn1_type, key, {cipher_info, password})
+      pem_contents = :public_key.pem_encode([entry])
+      {:ok, pem_contents}
+    else
+      {:error, %Error{}} = error ->
+        error
+    end
   end
 
-  defp string_or_nil_to_charlist(string) when is_binary(string) do
-    # TODO maybe assert the characters are ascii, to prevent compatibility issues?
-    String.to_charlist(string)
+  defp string_to_charlist(string) when is_binary(string) do
+    codes = :unicode.characters_to_list(string, :utf8)
+    all_printable_ascii? = Enum.all?(codes, &(&1 >= ?\s && &1 <= ?~))
+
+    if all_printable_ascii? do
+      {:ok, String.to_charlist(string)}
+    else
+      Error.new(:password_must_be_printable_ascii)
+      |> Error.wrap()
+    end
   end
 
+  @spec get_signature(binary, Records.rsa_private_key()) :: binary()
   def get_signature(message, private_key)
       when is_binary(message) and is_private_key(private_key) do
     :public_key.sign(message, @digest_type, private_key, @rsa_pk_sign_verify_opts)
   end
 
+  @spec verify_signature(binary, binary, Records.rsa_public_key()) :: boolean()
   def verify_signature(message, signature, public_key)
       when is_binary(message) and is_binary(signature) and is_public_key(public_key) do
     :public_key.verify(message, @digest_type, signature, public_key)
@@ -167,6 +171,7 @@ defmodule Hoplon.Crypto do
     end
   end
 
+  @spec get_fingerprint(Records.rsa_public_key(), :md5 | :sha256 | :sha512) :: String.t()
   def get_fingerprint(public_key, digest_type \\ :sha256)
       when is_public_key(public_key) and digest_type in [:md5, :sha256, :sha512] do
     # NOTE: it seems like doing this directly through :public_key isn't possible/easy.
