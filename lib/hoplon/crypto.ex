@@ -7,6 +7,12 @@ defmodule Hoplon.Crypto do
   @standard_rsa_public_exponent 65537
   @expected_key_bit_size 4096
 
+  @two_to_the_power_of_expected_key_bit_size Hoplon.Utils.naive_pow(2, @expected_key_bit_size)
+  @two_to_the_power_of_expected_key_bit_size_minus_one Hoplon.Utils.naive_pow(
+                                                         2,
+                                                         @expected_key_bit_size - 1
+                                                       )
+
   # if the message isn't digested, the signature fails for bigger messages (but not all that huge)
   @digest_type :sha512
   @rsa_pk_sign_verify_opts []
@@ -32,6 +38,48 @@ defmodule Hoplon.Crypto do
     public_exponent = Records.rsa_private_key(private_key, :publicExponent)
     modulus = Records.rsa_private_key(private_key, :modulus)
     Records.rsa_public_key(publicExponent: public_exponent, modulus: modulus)
+  end
+
+  @spec validate_private_key(term) :: {:ok, true} | {:error, Error.t()}
+  def validate_private_key(private_key) when is_private_key(private_key) do
+    public_exponent = Records.rsa_private_key(private_key, :publicExponent)
+    modulus = Records.rsa_private_key(private_key, :modulus)
+
+    with {:ok, true} <- validate_public_exponent(public_exponent) do
+      validate_modulus(modulus)
+    end
+  end
+
+  def validate_private_key(_term) do
+    {:error, Error.new(:invalid_private_key)}
+  end
+
+  @spec validate_public_key(term) :: {:ok, true} | {:error, Error.t()}
+  def validate_public_key(public_key) when is_public_key(public_key) do
+    public_exponent = Records.rsa_public_key(public_key, :publicExponent)
+    modulus = Records.rsa_public_key(public_key, :modulus)
+
+    with {:ok, true} <- validate_public_exponent(public_exponent) do
+      validate_modulus(modulus)
+    end
+  end
+
+  defp validate_public_exponent(valid_public_exponent) when valid_public_exponent in [3, 65537] do
+    {:ok, true}
+  end
+
+  defp validate_public_exponent(_invalid_public_exponent) do
+    {:error, Error.new(:invalid_public_exponent)}
+  end
+
+  defp validate_modulus(modulus)
+       when modulus >= @two_to_the_power_of_expected_key_bit_size_minus_one and
+              modulus < @two_to_the_power_of_expected_key_bit_size do
+    {:ok, true}
+  end
+
+  defp validate_modulus(_invalid_modulus) do
+    {:error, Error.new(:invalid_key_size)}
   end
 
   @spec decode_private_key_from_pem(binary(), binary()) ::

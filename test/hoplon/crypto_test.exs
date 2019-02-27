@@ -72,8 +72,48 @@ defmodule Hoplon.CryptoTest do
     modulus = Records.rsa_private_key(private_key, :modulus)
 
     expected_key_bit_size = 4096
-    assert naive_pow(2, expected_key_bit_size - 1) <= modulus
-    assert naive_pow(2, expected_key_bit_size) > modulus
+    assert Hoplon.Utils.naive_pow(2, expected_key_bit_size - 1) <= modulus
+    assert Hoplon.Utils.naive_pow(2, expected_key_bit_size) > modulus
+  end
+
+  test "validate_private_key and validate_public_key make sure the key is of the right size" do
+    assert {:error, %Error{code: :invalid_private_key}} =
+             Crypto.validate_private_key([{:bar}, {:foo}])
+
+    private_key_pem_file_contents = File.read!(@private_key_file)
+
+    assert {:ok, private_key} =
+             Crypto.decode_private_key_from_pem(private_key_pem_file_contents, @password)
+
+    public_key = Crypto.build_public_key(private_key)
+
+    assert {:ok, true} == Crypto.validate_private_key(private_key)
+    assert {:ok, true} == Crypto.validate_public_key(public_key)
+
+    short_key_filename = @tmp_dir <> "short_private_key.pem"
+
+    openssl_opts = [
+      "genrsa",
+      "-passout",
+      "pass:#{@password}",
+      "-des3",
+      "-out",
+      short_key_filename,
+      "128"
+    ]
+
+    openssl(openssl_opts)
+
+    {:ok, short_private_key} =
+      File.read!(short_key_filename) |> Crypto.decode_private_key_from_pem(@password)
+
+    short_public_key = Crypto.build_public_key(short_private_key)
+
+    assert {:error, %Error{code: :invalid_key_size}} ==
+             Crypto.validate_private_key(short_private_key)
+
+    assert {:error, %Error{code: :invalid_key_size}} ==
+             Crypto.validate_public_key(short_public_key)
   end
 
   test "decoding and encoding a public key pem file" do
@@ -85,7 +125,6 @@ defmodule Hoplon.CryptoTest do
     assert_same_pem(public_key_pem_file_contents, pem_contents)
   end
 
-  @tag :current
   test "you can't use a non-ascii character in a private key password" do
     private_key_pem_file_contents = File.read!(@private_key_file)
 
@@ -204,6 +243,13 @@ defmodule Hoplon.CryptoTest do
       hex = Crypto.hex_encode!(data)
       assert {:ok, data} == Crypto.hex_decode(String.downcase(hex))
       assert {:ok, data} == Crypto.hex_decode(String.upcase(hex))
+    end
+  end
+
+  property "hex encoding only generates lowercase a-f and digits" do
+    check all data <- binary() do
+      hex = Crypto.hex_encode!(data)
+      assert true == Regex.match?(~r/^([a-f0-9])*$/, hex)
     end
   end
 
@@ -333,26 +379,5 @@ defmodule Hoplon.CryptoTest do
   defp openssl(openssl_opts) do
     assert {output, 0} = System.cmd("openssl", openssl_opts)
     output
-  end
-
-  test "naive_pow is correct" do
-    assert naive_pow(3, 2) == 9
-    assert naive_pow(5, 1) == 5
-    assert naive_pow(42, 0) == 1
-    assert naive_pow(2, 10) == 1024
-  end
-
-  def naive_pow(base, exponent) when exponent >= 0 do
-    do_naive_pow(base, exponent)
-  end
-
-  defp do_naive_pow(base, remaining_times, accumulator \\ 1)
-
-  defp do_naive_pow(_base, 0, accumulator) do
-    accumulator
-  end
-
-  defp do_naive_pow(base, remaining_times, accumulator) when remaining_times > 0 do
-    do_naive_pow(base, remaining_times - 1, accumulator * base)
   end
 end

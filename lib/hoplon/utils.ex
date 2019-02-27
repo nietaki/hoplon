@@ -182,6 +182,20 @@ defmodule Hoplon.Utils do
     String.split(string, ~r/\R/, trim: true)
   end
 
+  def naive_pow(base, exponent) when exponent >= 0 do
+    do_naive_pow(base, exponent)
+  end
+
+  defp do_naive_pow(base, remaining_times, accumulator \\ 1)
+
+  defp do_naive_pow(_base, 0, accumulator) do
+    accumulator
+  end
+
+  defp do_naive_pow(base, remaining_times, accumulator) when remaining_times > 0 do
+    do_naive_pow(base, remaining_times - 1, accumulator * base)
+  end
+
   # ===========================================================================
   # Helper Functions
   # ===========================================================================
