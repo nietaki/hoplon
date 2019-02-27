@@ -67,4 +67,11 @@ defmodule Hoplon.UtilsTest do
       assert :ace in names
     end
   end
+
+  test "naive_pow is correct" do
+    assert naive_pow(3, 2) == 9
+    assert naive_pow(5, 1) == 5
+    assert naive_pow(42, 0) == 1
+    assert naive_pow(2, 10) == 1024
+  end
 end

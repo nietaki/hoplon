@@ -26,10 +26,11 @@ defmodule Hoplon.MixProject do
       source_url: "https://github.com/nietaki/hoplon",
       docs: docs(),
       dialyzer: [
-        plt_add_apps: [:mix],
+        plt_add_apps: [:mix, :public_key, :crypto],
         ignore_warnings: "dialyzer_ignore.exs",
         list_unused_filters: true
-      ]
+      ],
+      aliases: aliases()
     ]
   end
 
@@ -90,6 +91,12 @@ defmodule Hoplon.MixProject do
       extras: ["README.md"],
       assets: ["assets"],
       logo: "assets/hoplon_logo_64.png"
+    ]
+  end
+
+  defp aliases do
+    [
+      clean: ["clean", "run test/clean_tmp.exs"]
     ]
   end
 end
