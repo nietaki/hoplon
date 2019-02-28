@@ -16,6 +16,7 @@ script:
   - mix test --trace
   - if [[ "$TRAVIS_ELIXIR_VERSION" == "1.7.2" ]]; then mix format --check-formatted; else echo "not checking formatting for elixir 1.6"; fi
   - mix dialyzer --halt-exit-status
+  - bash scripts/integration_test.sh
 cache:
   directories:
     - _build
