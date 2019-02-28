@@ -8,7 +8,7 @@ printf "\n# cloning suffixer\n\n"
 
 rm -rf suffixer
 
-git clone --branch hoplon-integration-test git@github.com:nietaki/suffixer.git || exit 1
+git clone --branch hoplon-integration-test https://github.com/nietaki/suffixer.git || exit 1
 
 pushd suffixer
 
