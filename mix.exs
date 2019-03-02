@@ -69,11 +69,11 @@ defmodule Hoplon.MixProject do
       "mix.exs",
       "README*",
       # "readme*",
-      "LICENSE*"
+      "LICENSE*",
       # "license*",
       # "CHANGELOG*",
       # "changelog*",
-      # "src"
+      "src"
     ]
   end
 
@@ -103,7 +103,7 @@ defmodule Hoplon.MixProject do
   end
 
   defp compile_asn1(_args) do
-    IO.puts("compiling HoplonMessages")
+    IO.puts("Compiling ASN.1 message encoder/decoder modules")
     # http://erlang.org/doc/apps/asn1/asn1_getting_started.html
     # http://erlang.org/doc/man/asn1ct.html#compile-1
     :asn1ct.compile(:HoplonMessages, [
@@ -113,5 +113,16 @@ defmodule Hoplon.MixProject do
       {:i, 'lib/'},
       {:outdir, 'src/generated/'}
     ])
+
+    # the .asn1db files aren't useful after the erlang files have been generated.
+    # We don't want to package them with the library either.
+    IO.puts("Removing .asn1db files")
+
+    asn1db_files =
+      File.ls!("src/generated/")
+      |> Enum.filter(&String.ends_with?(&1, ".asn1db"))
+      |> Enum.map(&Path.join("src/generated/", &1))
+
+    Enum.each(asn1db_files, &File.rm!/1)
   end
 end
