@@ -96,7 +96,22 @@ defmodule Hoplon.MixProject do
 
   defp aliases do
     [
-      clean: ["clean", "run test/clean_tmp.exs"]
+      clean: ["clean", "run test/clean_tmp.exs"],
+      # mix compile *does* get invoked by mix test
+      compile: [&compile_asn1/1, "compile.erlang", "compile"]
     ]
+  end
+
+  defp compile_asn1(_args) do
+    IO.puts("compiling HoplonMessages")
+    # http://erlang.org/doc/apps/asn1/asn1_getting_started.html
+    # http://erlang.org/doc/man/asn1ct.html#compile-1
+    :asn1ct.compile(:HoplonMessages, [
+      :ber,
+      :der,
+      :noobj,
+      {:i, 'lib/'},
+      {:outdir, 'src/generated/'}
+    ])
   end
 end
