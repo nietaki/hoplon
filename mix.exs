@@ -113,16 +113,5 @@ defmodule Hoplon.MixProject do
       {:i, 'lib/'},
       {:outdir, 'src/generated/'}
     ])
-
-    # the .asn1db files aren't useful after the erlang files have been generated.
-    # We don't want to package them with the library either.
-    IO.puts("Removing .asn1db files")
-
-    asn1db_files =
-      File.ls!("src/generated/")
-      |> Enum.filter(&String.ends_with?(&1, ".asn1db"))
-      |> Enum.map(&Path.join("src/generated/", &1))
-
-    Enum.each(asn1db_files, &File.rm!/1)
   end
 end

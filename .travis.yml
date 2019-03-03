@@ -12,11 +12,7 @@ matrix:
       otp_release: 21.0
 env:
   - MIX_ENV=test
-before_install:
-  - sudo apt-get update
-  - sudo apt-get install -y hashdeep || sudo apt-get install -y md5deep
 script:
-  - bash scripts/verify_generated_erlang_code.sh
   - mix test --trace
   - bash scripts/integration_test.sh
   - if [[ "$TRAVIS_ELIXIR_VERSION" == "1.7.2" ]]; then mix format --check-formatted; else echo "not checking formatting for elixir 1.6"; fi

@@ -1,2 +1,2 @@
-# intermediate asn1 artifacts
-*.asn1db
+*
+!.gitignore
