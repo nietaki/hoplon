@@ -14,7 +14,7 @@ env:
   - MIX_ENV=test
 before_install:
   - sudo apt-get update
-  - sudo apt-get install -y hashdeep
+  - sudo apt-get install -y hashdeep || sudo apt-get install -y md5deep
 script:
   - bash scripts/verify_generated_erlang_code.sh
   - mix test --trace
