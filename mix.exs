@@ -52,7 +52,7 @@ defmodule Hoplon.MixProject do
 
   defp package() do
     [
-      licenses: ["MIT"],
+      licenses: ["Apache 2.0"],
       maintainers: ["Jacek Królikowski <nietaki@gmail.com>"],
       links: %{
         "GitHub" => "https://github.com/nietaki/hoplon"
