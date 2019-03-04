@@ -58,7 +58,9 @@ defmodule Hoplon.MixProject do
         "GitHub" => "https://github.com/nietaki/hoplon"
       },
       description: description(),
-      files: default_files() ++ ["scripts"]
+      # https://github.com/hexpm/hex/blob/master/lib/mix/tasks/hex.build.ex
+      files: default_files() ++ ["scripts"],
+      exclude_patterns: exclude_patterns()
     ]
   end
 
@@ -74,6 +76,12 @@ defmodule Hoplon.MixProject do
       # "CHANGELOG*",
       # "changelog*",
       "src"
+    ]
+  end
+
+  defp exclude_patterns() do
+    [
+      ~r{src/generated/.*\.(erl|hrl|asn1db|beam)}
     ]
   end
 
