@@ -3,7 +3,7 @@ HoplonMessages DEFINITIONS IMPLICIT TAGS ::=
 BEGIN
 EXPORTS Person;
 
-Person ::= [PRIVATE 19] SEQUENCE {
+Person ::= [APPLICATION 19] SEQUENCE {
         name UTF8String,
         location INTEGER {home(0),field(1),roving(2)},
         age INTEGER OPTIONAL }
