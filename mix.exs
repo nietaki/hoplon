@@ -15,7 +15,7 @@ defmodule Hoplon.MixProject do
   def project do
     [
       app: :hoplon,
-      version: "0.3.2",
+      version: "0.3.3",
       elixir: "~> 1.6",
       package: package(),
       start_permanent: false,
