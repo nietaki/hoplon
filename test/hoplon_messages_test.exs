@@ -1,15 +1,16 @@
 defmodule HoplonMessagesTest do
   use ExUnit.Case
 
+  @tag :asn1
   test "can serialize and deserialize a person" do
     person = {:Person, "Jóźeks", :roving, :asn1_NOVALUE}
     assert {:ok, encoded} = :HoplonMessages.encode(:Person, person)
     File.write!("test/tmp/person_encoded.der", encoded)
 
     assert {_output, 0} =
-             System.cmd("openssl", ~w{asn1parse -inform DER -in test/tmp/person_encoded.der})
+             System.cmd("openssl", ~w{asn1parse -i -inform DER -in test/tmp/person_encoded.der})
 
-    # IO.puts output
+    # IO.puts(output)
 
     # https://en.wikipedia.org/wiki/X.690#BER_encoding
     assert <<
@@ -22,8 +23,8 @@ defmodule HoplonMessagesTest do
              rest::binary
            >> = encoded
 
-    # APPLICATION
-    assert tag_class == 1
+    # context-specific
+    assert tag_class == 2
     # CONSTRUCTED
     assert pc == 1
     # as per the ASN1 file
@@ -31,15 +32,15 @@ defmodule HoplonMessagesTest do
     assert byte_size(rest) == length
 
     assert <<
-             # universal
-             0::size(2),
+             # context specific
+             2::size(2),
              # primitive,
              0::size(1),
-             # UTFF8String
-             12::size(5),
+             # 0, automatic tag for "name"
+             0::size(5),
              # short length
              0::size(1),
-             # string length
+             # length value
              length::size(7),
              "Jóźeks"::utf8,
              rest::binary
@@ -48,10 +49,16 @@ defmodule HoplonMessagesTest do
     assert length == byte_size("Jóźeks")
 
     assert <<
-             # simplified, integer,
-             2,
+             # context specific
+             2::size(2),
+             # primitive,
+             0::size(1),
+             # 1, automatic tag for "location"
+             1::size(5),
+             # short length
+             0::size(1),
              # length
-             1,
+             1::size(7),
              # roving, value
              2
            >> == rest

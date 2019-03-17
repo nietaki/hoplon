@@ -1,9 +1,8 @@
-HoplonMessages DEFINITIONS IMPLICIT TAGS ::=
+HoplonMessages DEFINITIONS AUTOMATIC TAGS ::= BEGIN
 
-BEGIN
 EXPORTS Person;
 
-Person ::= [APPLICATION 19] SEQUENCE {
+Person ::= [19] SEQUENCE {
         name UTF8String,
         location INTEGER {home(0),field(1),roving(2)},
         age INTEGER OPTIONAL }
