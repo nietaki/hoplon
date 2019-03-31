@@ -114,12 +114,21 @@ defmodule Hoplon.MixProject do
     IO.puts("Compiling ASN.1 message encoder/decoder modules")
     # http://erlang.org/doc/apps/asn1/asn1_getting_started.html
     # http://erlang.org/doc/man/asn1ct.html#compile-1
-    :asn1ct.compile(:HoplonMessages, [
-      :ber,
-      :der,
-      :noobj,
-      {:i, 'lib/'},
-      {:outdir, 'src/generated/'}
-    ])
+    asn1_compilation_result =
+      :asn1ct.compile(:HoplonMessages, [
+        :ber,
+        :der,
+        :noobj,
+        {:i, 'lib/'},
+        {:outdir, 'src/generated/'}
+      ])
+
+    case asn1_compilation_result do
+      :ok ->
+        :ok
+
+      {:error, _reason} ->
+        exit({:shutdown, 1})
+    end
   end
 end
