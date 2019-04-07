@@ -33,7 +33,8 @@ Audit ::= [2] SEQUENCE {
   verdict Verdict OPTIONAL,
   message UTF8String OPTIONAL,
   publicKeyFingerprint UTF8String,
-  createdAt UTCTime,
+  -- Unix TIME
+  createdAt INTEGER,
   -- is the person creating the audit the author of the package?
   auditedByAuthor BOOLEAN,
   ...

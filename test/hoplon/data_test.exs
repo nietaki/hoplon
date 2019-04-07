@@ -20,6 +20,7 @@ defmodule Hoplon.DataTest do
       assert {:Package, :asn1_DEFAULT, :undefined, :undefined} == empty_package
       assert is_record(empty_package)
       assert is_record(empty_package, :Package)
+      refute is_record(empty_package, :Audit)
     end
 
     test "encoding and decoding a fully defined record" do
@@ -53,6 +54,44 @@ defmodule Hoplon.DataTest do
         assert {:ok, decoded} = Encoder.decode(encoded, :Package)
         assert decoded != package
         assert decoded == Data.package(package, ecosystem: "hex.pm")
+      end
+    end
+  end
+
+  describe ":Audit" do
+    test "audit/0 create an empty record" do
+      assert {:Audit, :undefined, :asn1_NOVALUE, :asn1_NOVALUE, :undefined, :undefined,
+              :undefined} == Data.audit()
+
+      refute is_record(Data.audit(), :Package)
+    end
+
+    test "encoding and decoding a fully defined record" do
+      package = Data.package(ecosystem: "hex.pm", name: "foobar", version: "0.1.0")
+
+      audit =
+        Data.audit(
+          package: package,
+          verdict: :safe,
+          message: "took me 10 hours",
+          publicKeyFingerprint: "dummy",
+          createdAt: 1_554_670_254,
+          auditedByAuthor: false
+        )
+
+      assert {:ok, encoded} = Encoder.encode(audit)
+      assert is_binary(encoded)
+
+      assert {:ok, decoded} = Encoder.decode(encoded, :Audit)
+      assert decoded == audit
+    end
+
+    property "encoding and decoding ALL audits" do
+      check all audit <- Generators.input_audit() do
+        assert {:ok, encoded} = Encoder.encode(audit)
+        assert {:ok, decoded} = Encoder.decode(encoded, :Audit)
+
+        assert decoded == Generators.fill_in_defaults(audit)
       end
     end
   end
