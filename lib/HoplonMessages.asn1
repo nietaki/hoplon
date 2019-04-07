@@ -15,7 +15,8 @@ Package ::= [0] SEQUENCE {
   ecosystem UTF8String DEFAULT "hex.pm",
   name UTF8String,
   -- could be either a semantic versioning string or a hash
-  version PrintableString,
+  -- printableString decodes to a charlist
+  version UTF8String,
   ...
 }
 
@@ -31,7 +32,7 @@ Audit ::= [2] SEQUENCE {
   package Package,
   verdict Verdict OPTIONAL,
   message UTF8String OPTIONAL,
-  publicKeyFingerprint PrintableString,
+  publicKeyFingerprint UTF8String,
   createdAt UTCTime,
   -- is the person creating the audit the author of the package?
   auditedByAuthor BOOLEAN DEFAULT FALSE,
