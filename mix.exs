@@ -20,6 +20,7 @@ defmodule Hoplon.MixProject do
       package: package(),
       start_permanent: false,
       deps: deps(),
+      elixirc_paths: elixirc_paths(Mix.env()),
       elixirc_options: [
         warnings_as_errors: true
       ],
@@ -49,6 +50,10 @@ defmodule Hoplon.MixProject do
       {:ex_doc, ">= 0.0.1", only: [:dev, :test], optional: true, runtime: false}
     ]
   end
+
+  defp elixirc_paths(:test), do: ["lib", "test/support"]
+
+  defp elixirc_paths(_), do: ["lib"]
 
   defp package() do
     [

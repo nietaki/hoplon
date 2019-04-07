@@ -35,7 +35,7 @@ Audit ::= [2] SEQUENCE {
   publicKeyFingerprint UTF8String,
   createdAt UTCTime,
   -- is the person creating the audit the author of the package?
-  auditedByAuthor BOOLEAN DEFAULT FALSE,
+  auditedByAuthor BOOLEAN,
   ...
 }
 
