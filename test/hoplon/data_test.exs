@@ -95,4 +95,15 @@ defmodule Hoplon.DataTest do
       end
     end
   end
+
+  describe ":SignedAudit" do
+    property "encoding and decoding signed audits" do
+      check all signed_audit <- Generators.input_signed_audit() do
+        assert {:ok, encoded} = Encoder.encode(signed_audit)
+        assert {:ok, decoded} = Encoder.decode(encoded, :SignedAudit)
+
+        assert decoded == Generators.fill_in_defaults(signed_audit)
+      end
+    end
+  end
 end

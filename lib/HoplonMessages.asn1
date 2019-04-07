@@ -42,8 +42,7 @@ Audit ::= [2] SEQUENCE {
 
 SignedAudit ::= [3] SEQUENCE {
   audit Audit,
-  signature OCTET STRING,
-  ...
+  signature OCTET STRING
 }
 
 END

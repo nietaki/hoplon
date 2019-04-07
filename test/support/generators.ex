@@ -32,6 +32,13 @@ defmodule Support.Generators do
     end
   end
 
+  def input_signed_audit() do
+    gen all audit <- input_audit(),
+            signature <- binary() do
+      Data.signed_audit(audit: audit, signature: signature)
+    end
+  end
+
   def verdict do
     one_of(~w{dangerous suspicious lgtm safe}a)
   end
@@ -64,5 +71,15 @@ defmodule Support.Generators do
     package = Data.audit(audit, :package)
     package = fill_in_defaults(package)
     Data.audit(audit, package: package)
+  end
+
+  def fill_in_defaults(signed_audit) when Record.is_record(signed_audit, :SignedAudit) do
+    audit = Data.signed_audit(signed_audit, :audit)
+    audit = fill_in_defaults(audit)
+    Data.signed_audit(signed_audit, audit: audit)
+  end
+
+  def fill_in_defaults(other) do
+    other
   end
 end

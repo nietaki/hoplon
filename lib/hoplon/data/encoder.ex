@@ -35,6 +35,12 @@ defmodule Hoplon.Data.Encoder do
     Data.audit(record, package: package)
   end
 
+  defp fixup_decoded(record) when Record.is_record(record, :SignedAudit) do
+    audit = Data.signed_audit(record, :audit)
+    audit = fixup_decoded(audit)
+    Data.signed_audit(record, audit: audit)
+  end
+
   defp fixup_decoded(other) do
     other
   end
