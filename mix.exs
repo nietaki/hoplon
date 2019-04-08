@@ -64,7 +64,7 @@ defmodule Hoplon.MixProject do
       },
       description: description(),
       # https://github.com/hexpm/hex/blob/master/lib/mix/tasks/hex.build.ex
-      files: default_files() ++ ["scripts"],
+      files: default_files() ++ ["scripts", "guides"],
       exclude_patterns: exclude_patterns()
     ]
   end
@@ -101,7 +101,10 @@ defmodule Hoplon.MixProject do
     [
       main: "readme",
       source_url: "https://github.com/nietaki/hoplon",
-      extras: ["README.md"],
+      extras: [
+        "README.md",
+        "guides/directory_structure.md"
+      ],
       assets: ["assets"],
       logo: "assets/hoplon_logo_64.png"
     ]
