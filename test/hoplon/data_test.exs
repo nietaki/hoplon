@@ -94,6 +94,26 @@ defmodule Hoplon.DataTest do
         assert decoded == Generators.fill_in_defaults(audit)
       end
     end
+
+    property "(partially) garbage audits can't be decoded" do
+      check all audit <- Generators.input_audit(),
+                {:ok, encoded} = Encoder.encode(audit),
+                message_length = byte_size(encoded),
+                kept_size <- integer(0..div(message_length, 2)),
+                garbage <- binary(min_length: 0, max_length: message_length) do
+        kept_part = binary_part(encoded, 0, kept_size)
+        malformed_message = kept_part <> garbage
+        assert {:error, {:asn1, _}} = Encoder.decode(malformed_message, :Audit)
+      end
+    end
+
+    property "an encoded Audit can't be decoded as a different struct" do
+      check all audit <- Generators.input_audit(),
+                {:ok, encoded} = Encoder.encode(audit),
+                other_tag <- one_of([:Package, :SignedAudit]) do
+        assert {:error, {:asn1, _}} = Encoder.decode(encoded, other_tag)
+      end
+    end
   end
 
   describe ":SignedAudit" do
