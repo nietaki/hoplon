@@ -1,0 +1,48 @@
+HoplonMessages DEFINITIONS AUTOMATIC TAGS ::= BEGIN
+
+EXPORTS Person, Package, Verdict, Audit, SignedAudit;
+
+Person ::= [19] SEQUENCE {
+
+        name UTF8String,
+        location INTEGER {home(0),field(1),roving(2)},
+        age INTEGER OPTIONAL }
+
+
+-- TODO: add size restrictions to (all?) strings
+
+Package ::= [0] SEQUENCE {
+  ecosystem UTF8String DEFAULT "hex.pm",
+  name UTF8String,
+  -- could be either a semantic versioning string or a hash
+  -- printableString decodes to a charlist
+  version UTF8String,
+  ...
+}
+
+Verdict ::= [1] ENUMERATED {
+  dangerous,
+  suspicious,
+  lgtm,
+  safe,
+  ...
+}
+
+Audit ::= [2] SEQUENCE {
+  package Package,
+  verdict Verdict OPTIONAL,
+  message UTF8String OPTIONAL,
+  publicKeyFingerprint UTF8String,
+  -- Unix TIME
+  createdAt INTEGER,
+  -- is the person creating the audit the author of the package?
+  auditedByAuthor BOOLEAN,
+  ...
+}
+
+SignedAudit ::= [3] SEQUENCE {
+  audit Audit,
+  signature OCTET STRING
+}
+
+END

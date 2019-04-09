@@ -20,6 +20,7 @@ defmodule Hoplon.MixProject do
       package: package(),
       start_permanent: false,
       deps: deps(),
+      elixirc_paths: elixirc_paths(Mix.env()),
       elixirc_options: [
         warnings_as_errors: true
       ],
@@ -50,15 +51,21 @@ defmodule Hoplon.MixProject do
     ]
   end
 
+  defp elixirc_paths(:test), do: ["lib", "test/support"]
+
+  defp elixirc_paths(_), do: ["lib"]
+
   defp package() do
     [
-      licenses: ["MIT"],
+      licenses: ["Apache 2.0"],
       maintainers: ["Jacek Królikowski <nietaki@gmail.com>"],
       links: %{
         "GitHub" => "https://github.com/nietaki/hoplon"
       },
       description: description(),
-      files: default_files() ++ ["scripts"]
+      # https://github.com/hexpm/hex/blob/master/lib/mix/tasks/hex.build.ex
+      files: default_files() ++ ["scripts", "guides"],
+      exclude_patterns: exclude_patterns()
     ]
   end
 
@@ -69,11 +76,17 @@ defmodule Hoplon.MixProject do
       "mix.exs",
       "README*",
       # "readme*",
-      "LICENSE*"
+      "LICENSE*",
       # "license*",
       # "CHANGELOG*",
       # "changelog*",
-      # "src"
+      "src"
+    ]
+  end
+
+  defp exclude_patterns() do
+    [
+      ~r{src/generated/.*\.(erl|hrl|asn1db|beam)}
     ]
   end
 
@@ -88,7 +101,10 @@ defmodule Hoplon.MixProject do
     [
       main: "readme",
       source_url: "https://github.com/nietaki/hoplon",
-      extras: ["README.md"],
+      extras: [
+        "README.md",
+        "guides/directory_structure.md"
+      ],
       assets: ["assets"],
       logo: "assets/hoplon_logo_64.png"
     ]
@@ -96,7 +112,31 @@ defmodule Hoplon.MixProject do
 
   defp aliases do
     [
-      clean: ["clean", "run test/clean_tmp.exs"]
+      clean: ["clean", "run test/clean_tmp.exs"],
+      # mix compile *does* get invoked by mix test
+      compile: [&compile_asn1/1, "compile.erlang", "compile"]
     ]
+  end
+
+  defp compile_asn1(_args) do
+    IO.puts("Compiling ASN.1 message encoder/decoder modules")
+    # http://erlang.org/doc/apps/asn1/asn1_getting_started.html
+    # http://erlang.org/doc/man/asn1ct.html#compile-1
+    asn1_compilation_result =
+      :asn1ct.compile(:HoplonMessages, [
+        :ber,
+        :der,
+        :noobj,
+        {:i, 'lib/'},
+        {:outdir, 'src/generated/'}
+      ])
+
+    case asn1_compilation_result do
+      :ok ->
+        :ok
+
+      {:error, _reason} ->
+        exit({:shutdown, 1})
+    end
   end
 end

@@ -351,6 +351,10 @@ defmodule Hoplon.CryptoTest do
       openssl(["dgst", "-sha512", public_key_der_file])
       |> extract_hash.()
 
+    assert printable?(md5_hash)
+    assert printable?(sha256_hash)
+    assert printable?(sha512_hash)
+
     public_key_pem = File.read!(@public_key_file)
     assert {:ok, public_key} = Crypto.decode_public_key_from_pem(public_key_pem)
 
@@ -379,5 +383,10 @@ defmodule Hoplon.CryptoTest do
   defp openssl(openssl_opts) do
     assert {output, 0} = System.cmd("openssl", openssl_opts)
     output
+  end
+
+  # printable according to the ASN.1 standard
+  defp printable?(string) do
+    string =~ ~r{^[A-Za-z0-9'()+,./:=?-]*$}
   end
 end
