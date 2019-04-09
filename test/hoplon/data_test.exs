@@ -11,8 +11,6 @@ defmodule Hoplon.DataTest do
 
   alias Support.Generators
 
-  @moduletag :current
-
   describe ":Package" do
     test "package/0 creates a new empty record" do
       empty_package = Data.package()
