@@ -9,8 +9,9 @@ defmodule Support.Generators do
   def input_package() do
     gen all ecosystem <- frequency([{5, proper_string()}, {1, constant(:asn1_DEFAULT)}]),
             name <- proper_string(),
-            version <- proper_string() do
-      Data.package(ecosystem: ecosystem, name: name, version: version)
+            version <- proper_string(),
+            hash <- proper_string() do
+      Data.package(ecosystem: ecosystem, name: name, version: version, hash: hash)
     end
   end
 
@@ -60,7 +61,7 @@ defmodule Support.Generators do
   def fill_in_defaults(package) when Record.is_record(package, :Package) do
     case Data.package(package, :ecosystem) do
       :asn1_DEFAULT ->
-        Data.package(package, ecosystem: "hex.pm")
+        Data.package(package, ecosystem: "hexpm")
 
       _ ->
         package

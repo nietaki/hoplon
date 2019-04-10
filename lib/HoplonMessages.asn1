@@ -12,11 +12,15 @@ Person ::= [19] SEQUENCE {
 -- TODO: add size restrictions to (all?) strings
 
 Package ::= [0] SEQUENCE {
-  ecosystem UTF8String DEFAULT "hex.pm",
+  -- "hexpm" seems to be the identifier mix uses in mix.lock
+  ecosystem UTF8String DEFAULT "hexpm",
   name UTF8String,
-  -- could be either a semantic versioning string or a hash
-  -- printableString decodes to a charlist
+  -- the version number, like "1.0.0-rc3"
+  -- NOTE if this was PrintableString, Erlang would decode it to a charlist
   version UTF8String,
+  -- the hash of the package version, like
+  -- "3c7b0f02851f5fc13b040e8e925051452e41248f685e40250d7e40b07b9f8c10"
+  hash UTF8String,
   ...
 }
 

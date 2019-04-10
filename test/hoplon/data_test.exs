@@ -15,14 +15,21 @@ defmodule Hoplon.DataTest do
     test "package/0 creates a new empty record" do
       empty_package = Data.package()
 
-      assert {:Package, :asn1_DEFAULT, :undefined, :undefined} == empty_package
+      assert {:Package, :asn1_DEFAULT, :undefined, :undefined, :undefined} == empty_package
       assert is_record(empty_package)
       assert is_record(empty_package, :Package)
       refute is_record(empty_package, :Audit)
     end
 
+    test "proper error when encoding and decoding a record missing a field" do
+      package = Data.package(ecosystem: "hexpm", version: "0.1.0", hash: "deadbeef")
+
+      assert {:error, _} = Encoder.encode(package)
+    end
+
     test "encoding and decoding a fully defined record" do
-      package = Data.package(ecosystem: "hex.pm", name: "foobar", version: "0.1.0")
+      package =
+        Data.package(ecosystem: "hexpm", name: "foobar", version: "0.1.0", hash: "deadbeef")
 
       assert {:ok, encoded} = Encoder.encode(package)
       assert is_binary(encoded)
@@ -42,7 +49,7 @@ defmodule Hoplon.DataTest do
       end
     end
 
-    property "Package with a default ecosystem gets decoded as hex.pm" do
+    property "Package with a default ecosystem gets decoded as hexpm" do
       check all base_package <- Generators.input_package() do
         package = Data.package(base_package, ecosystem: :asn1_DEFAULT)
 
@@ -51,7 +58,7 @@ defmodule Hoplon.DataTest do
 
         assert {:ok, decoded} = Encoder.decode(encoded, :Package)
         assert decoded != package
-        assert decoded == Data.package(package, ecosystem: "hex.pm")
+        assert decoded == Data.package(package, ecosystem: "hexpm")
       end
     end
   end
@@ -65,7 +72,8 @@ defmodule Hoplon.DataTest do
     end
 
     test "encoding and decoding a fully defined record" do
-      package = Data.package(ecosystem: "hex.pm", name: "foobar", version: "0.1.0")
+      package =
+        Data.package(ecosystem: "hexpm", name: "foobar", version: "0.1.0", hash: "deadbeef")
 
       audit =
         Data.audit(
