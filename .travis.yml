@@ -13,6 +13,7 @@ matrix:
 env:
   - MIX_ENV=test
 script:
+  - mix clean
   - mix test --trace
   - bash scripts/integration_test.sh
   - if [[ "$TRAVIS_ELIXIR_VERSION" == "1.7.2" ]]; then mix format --check-formatted; else echo "not checking formatting for elixir 1.6"; fi
