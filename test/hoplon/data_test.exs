@@ -132,4 +132,29 @@ defmodule Hoplon.DataTest do
       end
     end
   end
+
+  describe "sequence of signed audits (:SignedAudits)" do
+    property "encoding and decoding" do
+      check all signed_audits <- list_of(Generators.input_signed_audit()) do
+        assert {:ok, encoded} = Encoder.encode(signed_audits, :SignedAudits)
+
+        # 0 - universal tag class, 1 - constructed, 16 - SEQUENCE OF
+        assert <<
+                 0::size(2),
+                 1::size(1),
+                 16::size(5),
+                 short_length::size(8),
+                 rest::binary
+               >> = encoded
+
+        if short_length <= 127 do
+          assert byte_size(rest) == short_length
+        end
+
+        assert {:ok, decoded} = Encoder.decode(encoded, :SignedAudits)
+
+        assert decoded == Generators.fill_in_defaults(signed_audits)
+      end
+    end
+  end
 end

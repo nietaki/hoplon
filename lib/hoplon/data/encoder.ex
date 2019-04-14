@@ -4,24 +4,35 @@ defmodule Hoplon.Data.Encoder do
   require Hoplon.Data
   alias Hoplon.Data
   @record_tags [:Package, :Audit, :SignedAudit]
+  @collection_tags [:SignedAudits]
 
-  def encode(package) when Record.is_record(package) and elem(package, 0) in @record_tags do
-    tag = elem(package, 0)
-    :HoplonMessages.encode(tag, package)
+  @type_tags @record_tags ++ @collection_tags
+
+  def encode(record) when Record.is_record(record) and elem(record, 0) in @record_tags do
+    tag = elem(record, 0)
+    encode(record, tag)
+  end
+
+  def encode(data, tag) do
+    :HoplonMessages.encode(tag, data)
   end
 
   def decode(message, tag) do
     case do_decode(message, tag) do
-      {:ok, record} ->
-        {:ok, fixup_decoded(record)}
+      {:ok, data} ->
+        {:ok, fixup_decoded(data)}
 
       other ->
         other
     end
   end
 
-  defp do_decode(message, tag) when is_binary(message) and tag in @record_tags do
+  defp do_decode(message, tag) when is_binary(message) and tag in @type_tags do
     :HoplonMessages.decode(tag, message)
+  end
+
+  defp fixup_decoded(list) when is_list(list) do
+    Enum.map(list, &fixup_decoded/1)
   end
 
   defp fixup_decoded(record) when Record.is_record(record, :Package) do

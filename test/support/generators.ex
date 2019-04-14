@@ -58,6 +58,10 @@ defmodule Support.Generators do
     string(:printable)
   end
 
+  def fill_in_defaults(list) when is_list(list) do
+    Enum.map(list, &fill_in_defaults/1)
+  end
+
   def fill_in_defaults(package) when Record.is_record(package, :Package) do
     case Data.package(package, :ecosystem) do
       :asn1_DEFAULT ->

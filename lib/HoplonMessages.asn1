@@ -1,6 +1,6 @@
 HoplonMessages DEFINITIONS AUTOMATIC TAGS ::= BEGIN
 
-EXPORTS Person, Package, Verdict, Audit, SignedAudit;
+EXPORTS Person, Package, Verdict, Audit, SignedAudit, SignedAudits;
 
 Person ::= [19] SEQUENCE {
 
@@ -48,5 +48,7 @@ SignedAudit ::= [3] SEQUENCE {
   audit Audit,
   signature OCTET STRING
 }
+
+SignedAudits ::= SEQUENCE OF SignedAudit
 
 END
