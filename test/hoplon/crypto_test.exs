@@ -30,7 +30,7 @@ defmodule Hoplon.CryptoTest do
 
   setup_all do
     if !File.exists?(@private_key_file) do
-      Logger.info("Lazily generating private and public key files")
+      Logger.info("Lazily generating private and public key files used for tests")
 
       openssl_opts = [
         "genrsa",
@@ -319,6 +319,8 @@ defmodule Hoplon.CryptoTest do
   end
 
   test "getting public key fingerprint" do
+    public_key_der_file = @tmp_dir <> "public.der"
+
     openssl_opts = [
       "rsa",
       "-in",
@@ -326,12 +328,12 @@ defmodule Hoplon.CryptoTest do
       "-pubin",
       "-pubout",
       "-outform",
-      "DER"
+      "DER",
+      "-out",
+      public_key_der_file
     ]
 
-    public_key_der_binary = openssl(openssl_opts)
-    public_key_der_file = @tmp_dir <> "public.der"
-    File.write!(public_key_der_file, public_key_der_binary, [:write])
+    openssl(openssl_opts)
 
     extract_hash = fn string ->
       regex = ~r/[0-9a-f]{30,}/
@@ -381,7 +383,7 @@ defmodule Hoplon.CryptoTest do
   end
 
   defp openssl(openssl_opts) do
-    assert {output, 0} = System.cmd("openssl", openssl_opts)
+    assert {output, 0} = System.cmd("openssl", openssl_opts, stderr_to_stdout: true)
     output
   end
 
