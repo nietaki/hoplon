@@ -112,7 +112,7 @@ defmodule Hoplon.MixProject do
 
   defp aliases do
     [
-      clean: ["clean", "run test/clean_tmp.exs"],
+      clean: ["clean", "run --no-compile --no-start --no-mix-exs test/clean_tmp.exs"],
       # mix compile *does* get invoked by mix test
       compile: [&compile_asn1/1, "compile.erlang", "compile"]
     ]

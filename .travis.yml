@@ -13,7 +13,7 @@ matrix:
 env:
   - MIX_ENV=test
 before_script:
-  - mix clean || echo "mix clean failed"
+  - mix clean
 script:
   - mix test --trace
   - bash scripts/integration_test.sh
