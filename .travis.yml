@@ -12,6 +12,8 @@ matrix:
       otp_release: 21.0
 env:
   - MIX_ENV=test
+before_install:
+  - sudo apt-get install -y tree
 before_script:
   - mix clean
   - tree
