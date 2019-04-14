@@ -114,29 +114,62 @@ defmodule Hoplon.MixProject do
     [
       clean: ["clean", "run --no-compile --no-start --no-mix-exs test/clean_tmp.exs"],
       # mix compile *does* get invoked by mix test
-      compile: [&compile_asn1/1, "compile.erlang", "compile"]
+      compile: [&compile_asn1/1, &create_hoplon_build_directory/1, "compile.erlang", "compile"]
     ]
   end
 
   defp compile_asn1(_args) do
-    IO.puts("Compiling ASN.1 message encoder/decoder modules")
-    # http://erlang.org/doc/apps/asn1/asn1_getting_started.html
-    # http://erlang.org/doc/man/asn1ct.html#compile-1
-    asn1_compilation_result =
-      :asn1ct.compile(:HoplonMessages, [
-        :ber,
-        :der,
-        :noobj,
-        {:i, 'lib/'},
-        {:outdir, 'src/generated/'}
-      ])
+    asn1_last_modified = get_last_modified("lib/HoplonMessages.asn1")
+    false = is_nil(asn1_last_modified)
 
-    case asn1_compilation_result do
-      :ok ->
-        :ok
+    erl_last_modified = get_last_modified("src/generated/HoplonMessages.erl") || 0
+    hrl_last_modified = get_last_modified("src/generated/HoplonMessages.hrl") || 0
 
-      {:error, _reason} ->
-        exit({:shutdown, 1})
+    if asn1_last_modified >= min(erl_last_modified, hrl_last_modified) do
+      IO.puts("Compiling Hoplon ASN.1 messages encoder/decoder module")
+      # http://erlang.org/doc/apps/asn1/asn1_getting_started.html
+      # http://erlang.org/doc/man/asn1ct.html#compile-1
+      asn1_compilation_result =
+        :asn1ct.compile(:HoplonMessages, [
+          :ber,
+          :der,
+          :noobj,
+          {:i, 'lib/'},
+          {:outdir, 'src/generated/'}
+        ])
+
+      case asn1_compilation_result do
+        :ok ->
+          :ok
+
+        {:error, _reason} ->
+          exit({:shutdown, 1})
+      end
+    else
+      :ok
+    end
+  end
+
+  defp create_hoplon_build_directory(_args) do
+    # it seems like `mix compile.erlang` struggles when the path where it needs to
+    # put the compilation artifacts doesn't exist, which results in an error like:
+    #
+    # _build/test/lib/hoplon/ebin/HoplonMessages.bea#: error writing file: no such file or directory
+
+    hoplon_compile_path = Mix.Project.compile_path()
+    File.mkdir_p!(hoplon_compile_path)
+    :ok
+  end
+
+  # returns the last modified timestamp for the file or
+  # nil if the file does not exist
+  defp get_last_modified(path) do
+    case File.lstat(path, time: :posix) do
+      {:ok, %{mtime: mtime}} when is_integer(mtime) ->
+        mtime
+
+      {:error, :enoent} ->
+        nil
     end
   end
 end
