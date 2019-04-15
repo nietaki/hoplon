@@ -29,7 +29,6 @@ defmodule Hoplon.CLI.GenericTask do
             ) :: any()
 
   def run(task_module, argv, opts) do
-    alias Hoplon.CLI.Tools
     op_config = add_default_op_config(task_module.option_parser_config())
 
     valid_actions = task_module.valid_actions()
@@ -37,10 +36,10 @@ defmodule Hoplon.CLI.GenericTask do
     case OptionParser.parse(argv, op_config) do
       {_parsed, _args, invalid = [_ | _]} ->
         msg = invalid_switches_message(invalid)
-        Tools.task_exit(1, msg)
+        Mix.raise(msg)
 
       {_parsed, [], []} ->
-        Tools.task_exit(1, missing_action_message(valid_actions))
+        Mix.raise(missing_action_message(valid_actions))
 
       {switches, args = [a | _rest], _invalid = []} ->
         if a in valid_actions do
@@ -48,7 +47,7 @@ defmodule Hoplon.CLI.GenericTask do
 
           task_module.do_task(switches, args, opts)
         else
-          Tools.task_exit(1, invalid_action_message(a, valid_actions))
+          Mix.raise(invalid_action_message(a, valid_actions))
         end
     end
   end
@@ -58,7 +57,7 @@ defmodule Hoplon.CLI.GenericTask do
   defp default_options() do
     [
       strict: [
-        env: :string,
+        hoplon_env: :string,
         hoplon_dir: :string
       ],
       aliases: []
@@ -66,7 +65,20 @@ defmodule Hoplon.CLI.GenericTask do
   end
 
   defp default_switch_values() do
-    []
+    [
+      hoplon_env: env_var_or_default("HOPLON_ENV", "default"),
+      hoplon_dir: env_var_or_default("HOPLON_DIR", Path.expand("~/.hoplon"))
+    ]
+  end
+
+  defp env_var_or_default(env_var_name, default) do
+    case System.get_env(env_var_name) do
+      empty when empty in [nil, ""] ->
+        default
+
+      value ->
+        value
+    end
   end
 
   ## Helper functions

@@ -21,12 +21,4 @@ defmodule Hoplon.CLI.Tools do
       {:error, :invalid_env_name}
     end
   end
-
-  # TODO clean up the other Utils module :S
-
-  defdelegate task_exit(exit_code), to: Hoplon.Utils
-  defdelegate task_exit(exit_code, message), to: Hoplon.Utils
-
-  # def handle_args_for_action_task(argv, task_options, valid_actions, success_continuation) do
-  # end
 end
