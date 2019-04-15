@@ -1,4 +1,4 @@
-defmodule Hoplon.CLI.Utils do
+defmodule Hoplon.CLI.Tools do
   def bootstrap_hoplon_env(hoplon_dir_path, env_name) do
     env_path = Path.join(hoplon_dir_path, env_name)
     peer_keys_path = Path.join(env_path, "peer_keys")

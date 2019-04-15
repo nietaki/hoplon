@@ -1,7 +1,6 @@
 defmodule Mix.Tasks.Hoplon.MyKey do
   use Mix.Task
 
-  alias Hoplon.CLI.Options
   alias Hoplon.CLI.GenericTask
 
   @behaviour GenericTask
@@ -13,7 +12,7 @@ defmodule Mix.Tasks.Hoplon.MyKey do
 
   @impl Mix.Task
   def run(argv, opts \\ []) do
-    Options.parse_options_and_continue(__MODULE__, argv, opts)
+    GenericTask.run(__MODULE__, argv, opts)
   end
 
   @impl GenericTask
