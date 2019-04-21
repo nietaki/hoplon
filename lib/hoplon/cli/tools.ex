@@ -14,6 +14,19 @@ defmodule Hoplon.CLI.Tools do
     end
   end
 
+  def bootstrap_hoplon_env!(hoplon_dir_path, env_name) do
+    case bootstrap_hoplon_env(hoplon_dir_path, env_name) do
+      {:ok, _env_path} = success ->
+        success
+
+      {:error, reason} ->
+        Mix.raise(inspect(reason))
+
+      _ ->
+        Mix.raise("error when bootstraping hoplon env")
+    end
+  end
+
   defp validate_env_name(env_name) do
     if env_name =~ ~r/^[a-zA-Z0-9_-]+$/ do
       {:ok, env_name}
