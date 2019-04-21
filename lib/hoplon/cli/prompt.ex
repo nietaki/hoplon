@@ -42,6 +42,53 @@ defmodule Hoplon.CLI.Prompt do
     end
   end
 
+  def print_table(headers, rows, opts) do
+    column_count = Enum.count(headers)
+    true = Enum.all?(rows, &(Enum.count(&1) == column_count))
+    spacers = 1..column_count |> Enum.map(fn _ -> "---" end)
+
+    table =
+      [headers, spacers | rows]
+      |> map2(&convert_to_representation/1)
+
+    column_lengths =
+      table
+      |> transpose()
+      |> Enum.map(fn entries ->
+        entries
+        |> Enum.map(&String.length/1)
+        |> Enum.max()
+      end)
+
+    rows =
+      table
+      |> Enum.map(fn row -> Enum.zip(row, column_lengths) end)
+      |> map2(fn {text, min_length} -> String.pad_trailing(text, min_length) end)
+      |> Enum.map(&Enum.join(&1, " | "))
+      |> Enum.map(fn whole_row -> "| #{whole_row} |" end)
+
+    Enum.each(rows, &puts(&1, opts))
+  end
+
+  defp transpose(rows) do
+    rows
+    |> Enum.to_list()
+    |> List.zip()
+    |> Enum.map(&Tuple.to_list/1)
+  end
+
+  defp map2(list_of_lists, function) do
+    Enum.map(list_of_lists, fn list -> Enum.map(list, function) end)
+  end
+
+  defp convert_to_representation(nil) do
+    "<nil>"
+  end
+
+  defp convert_to_representation(value) do
+    String.Chars.to_string(value)
+  end
+
   ## Helper functions
 
   defp full_prompt(prompt_text) do
