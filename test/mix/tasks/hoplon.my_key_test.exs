@@ -8,8 +8,6 @@ defmodule Mix.Tasks.Hoplon.MyKeyTest do
   # hang waiting for input and time out, let's make it faster
   @moduletag timeout: 5000
 
-  @moduletag :current
-
   test "generating a new key where one doesn't exist before" do
     hoplon_dir = random_tmp_directory()
     System.put_env("HOPLON_DIR", hoplon_dir)
@@ -75,17 +73,5 @@ defmodule Mix.Tasks.Hoplon.MyKeyTest do
 
     private_keyfile = File.read!(Path.join(hoplon_dir, "default/my.private.pem"))
     assert private_keyfile =~ "BEGIN RSA PRIVATE KEY"
-  end
-
-  defp get_output_lines(opts) do
-    mock_io = Keyword.fetch!(opts, :io_device)
-    output = StringIO.flush(mock_io)
-    String.split(output, "\n", trim: true)
-  end
-
-  defp mock_input_opts(user_inputs) do
-    {:ok, mock_io} = StringIO.open(user_inputs)
-    {:ok, mock_stderr} = StringIO.open("")
-    [io_device: mock_io, stderr_device: mock_stderr]
   end
 end

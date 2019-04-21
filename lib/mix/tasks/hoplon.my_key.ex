@@ -19,7 +19,8 @@ defmodule Mix.Tasks.Hoplon.MyKey do
   end
 
   @impl GenericTask
-  def valid_actions(), do: ["generate", "show", "change_password"]
+  # def valid_actions(), do: ["generate", "show", "change_password"]
+  def valid_actions(), do: ["generate"]
 
   @impl GenericTask
   def option_parser_config() do
