@@ -45,10 +45,9 @@ defmodule Hoplon.CLI.Prompt do
   def print_table(headers, rows, opts) do
     column_count = Enum.count(headers)
     true = Enum.all?(rows, &(Enum.count(&1) == column_count))
-    spacers = 1..column_count |> Enum.map(fn _ -> "---" end)
 
     table =
-      [headers, spacers | rows]
+      [headers | rows]
       |> map2(&convert_to_representation/1)
 
     column_lengths =
@@ -57,8 +56,13 @@ defmodule Hoplon.CLI.Prompt do
       |> Enum.map(fn entries ->
         entries
         |> Enum.map(&String.length/1)
+        |> Kernel.++([3])
         |> Enum.max()
       end)
+
+    spacers = Enum.map(column_lengths, &String.duplicate("-", &1))
+    [headers | rows] = table
+    table = [headers, spacers | rows]
 
     rows =
       table

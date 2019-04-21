@@ -5,8 +5,6 @@ defmodule Mix.Tasks.Hoplon.TrustedKeysTest do
   use ExUnit.Case, async: false
   @moduletag timeout: 10_000
 
-  @moduletag :current
-
   describe "add action" do
     test "adding a trusted key" do
       {fingerprint, key_path, public_pem} = generate_random_public_key()
@@ -159,6 +157,33 @@ defmodule Mix.Tasks.Hoplon.TrustedKeysTest do
 
       output_lines = get_output_lines(opts)
       assert [_, _, "Removing trusted key with fingerprint " <> ^fingerprint] = output_lines
+    end
+  end
+
+  describe "list action" do
+    test "displays both fingerprints and names" do
+      _env_dir = prepare_fresh_hoplon_env()
+      {fingerprint, key_path, _public_pem} = generate_random_public_key()
+
+      user_inputs = ""
+
+      opts = mock_input_opts(user_inputs)
+      TrustedKeys.run(["add", key_path, "--nickname", "my friend"], opts)
+
+      opts = mock_input_opts(user_inputs)
+      TrustedKeys.run(["list"], opts)
+
+      output_lines = get_output_lines(opts)
+
+      assert [
+               _hoplon_dir,
+               _hoplon_env,
+               "| fingerprint                                                      | name      |",
+               "| ---------------------------------------------------------------- | --------- |",
+               last_row
+             ] = output_lines
+
+      assert "| #{fingerprint} | my friend |" == last_row
     end
   end
 

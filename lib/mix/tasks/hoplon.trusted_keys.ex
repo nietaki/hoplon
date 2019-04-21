@@ -42,7 +42,19 @@ defmodule Mix.Tasks.Hoplon.TrustedKeys do
     config_file_path = Tools.config_file_path(env_path)
     config = ConfigFile.read_or_create!(config_file_path)
     trusted_keys = Map.get(config, :trusted_keys, [])
-    IO.inspect(trusted_keys)
+    headers = ["fingerprint", "name"]
+
+    rows =
+      trusted_keys
+      |> Enum.map(fn key ->
+        [
+          Map.get(key, :sha_256_fingerprint),
+          Map.get(key, :nickname)
+        ]
+      end)
+      |> Enum.sort()
+
+    Prompt.print_table(headers, rows, opts)
   end
 
   def do_task(switches, ["add", path] = _args, opts) do

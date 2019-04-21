@@ -6,7 +6,6 @@ defmodule Hoplon.CLI.PromptTest do
   use ExUnit.Case
 
   @moduletag timeout: 10_000
-  @moduletag :current
 
   describe "print_table" do
     test "handles an example case" do
@@ -24,7 +23,7 @@ defmodule Hoplon.CLI.PromptTest do
 
       assert full_output <> "\n" == """
              | foo  | bingo | bar baz        |
-             | ---  | ---   | ---            |
+             | ---- | ----- | -------------- |
              | 1    | 2.0   | this is longer |
              | true | false | <nil>          |
              """
