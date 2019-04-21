@@ -4,7 +4,7 @@ defmodule Support.Utils do
   end
 
   def random_tmp_directory() do
-    "/tmp/hoplon_tests/#{random_string()}"
+    "/tmp/hoplon_tests/#{random_string(16)}"
   end
 
   # Mix task testing
@@ -19,5 +19,11 @@ defmodule Support.Utils do
     {:ok, mock_io} = StringIO.open(user_inputs)
     {:ok, mock_stderr} = StringIO.open("")
     [io_device: mock_io, stderr_device: mock_stderr]
+  end
+
+  def prepare_fresh_hoplon_env() do
+    hoplon_dir = random_tmp_directory()
+    System.put_env("HOPLON_DIR", hoplon_dir)
+    Path.join(hoplon_dir, "default")
   end
 end

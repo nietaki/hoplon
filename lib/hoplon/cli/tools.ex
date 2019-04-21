@@ -16,8 +16,8 @@ defmodule Hoplon.CLI.Tools do
 
   def bootstrap_hoplon_env!(hoplon_dir_path, env_name) do
     case bootstrap_hoplon_env(hoplon_dir_path, env_name) do
-      {:ok, _env_path} = success ->
-        success
+      {:ok, env_path} ->
+        env_path
 
       {:error, reason} ->
         Mix.raise(inspect(reason))
@@ -33,5 +33,35 @@ defmodule Hoplon.CLI.Tools do
     else
       {:error, :invalid_env_name}
     end
+  end
+
+  def private_key_path(env_path) do
+    Path.join(env_path, "my.private.pem")
+  end
+
+  def public_key_path(env_path) do
+    Path.join(env_path, "my.public.pem")
+  end
+
+  def config_file_path(env_path) do
+    Path.join(env_path, "config.exs")
+  end
+
+  def get_peer_key_path(env_path, key_fingerprint) do
+    if Regex.match?(~r/^[0-9a-f]{30,}$/, key_fingerprint) do
+      path = Path.join([env_path, "peer_keys", "#{key_fingerprint}.public.pem"])
+      {:ok, path}
+    else
+      {:error, :invalid_key_fingerprint}
+    end
+  end
+
+  def print_and_get_env_path(switches, opts) do
+    alias Hoplon.CLI.Prompt
+    hoplon_dir = Keyword.fetch!(switches, :hoplon_dir)
+    hoplon_env = Keyword.fetch!(switches, :hoplon_env)
+    Prompt.puts("hoplon_dir: #{hoplon_dir}", opts)
+    Prompt.puts("hoplon_env: #{hoplon_env}", opts)
+    bootstrap_hoplon_env!(hoplon_dir, hoplon_env)
   end
 end

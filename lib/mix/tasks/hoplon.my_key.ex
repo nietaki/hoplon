@@ -8,7 +8,7 @@ defmodule Mix.Tasks.Hoplon.MyKey do
 
   @behaviour GenericTask
 
-  @shortdoc "utilities for managing user's private/public keypair"
+  @shortdoc "utilities for managing your private/public keypair"
 
   @moduledoc """
   """
@@ -37,13 +37,10 @@ defmodule Mix.Tasks.Hoplon.MyKey do
 
   @impl GenericTask
   def do_task(switches, ["generate" | _] = _args, opts) do
-    hoplon_dir = Keyword.fetch!(switches, :hoplon_dir)
-    hoplon_env = Keyword.fetch!(switches, :hoplon_env)
-    Prompt.puts("hoplon_dir: #{hoplon_dir}", opts)
-    Prompt.puts("hoplon_env: #{hoplon_env}", opts)
-    {:ok, _} = Tools.bootstrap_hoplon_env!(hoplon_dir, hoplon_env)
-    private_key_file = Path.join([hoplon_dir, hoplon_env, "my.private.pem"])
-    public_key_file = Path.join([hoplon_dir, hoplon_env, "my.public.pem"])
+    env_path = Tools.print_and_get_env_path(switches, opts)
+
+    private_key_file = Tools.private_key_path(env_path)
+    public_key_file = Tools.public_key_path(env_path)
 
     if File.exists?(private_key_file) do
       sure? =

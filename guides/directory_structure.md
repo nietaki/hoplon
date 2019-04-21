@@ -20,9 +20,9 @@ Hoplon caches some data on the developer's disk. Here's how it organises its dat
 
       peer_keys/    # contains public keys the developer interacted with
                     # NOTE, those are not necessarily trusted keys
-        <fingerprint>.pem
-        071972badf41fcf7cedf59b2af686e6bf6492f655b616c04eb48f7d87243825a.pem
-        89197f969fac85701a8f4b381bef20ffce2c8af382f48187b988ec13d42462ef.pem
+        <fingerprint>.public.pem
+        071972badf41fcf7cedf59b2af686e6bf6492f655b616c04eb48f7d87243825a.public.pem
+        89197f969fac85701a8f4b381bef20ffce2c8af382f48187b988ec13d42462ef.public.pem
 
       audits/ # contains previously downloaded or locally generated audits
               # just because an audit is here, it doesn't mean that it's trusted,
