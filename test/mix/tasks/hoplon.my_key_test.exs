@@ -28,6 +28,53 @@ defmodule Mix.Tasks.Hoplon.MyKeyTest do
              "Generating...",
              "DONE!"
            ] == get_output_lines(opts)
+
+    private_keyfile = File.read!(Path.join(hoplon_dir, "default/my.private.pem"))
+    assert private_keyfile =~ "BEGIN RSA PRIVATE KEY"
+  end
+
+  test "user aborting the operation when the key already exists" do
+    assert_raise Mix.Error, "aborted", fn ->
+      hoplon_dir = random_tmp_directory()
+      System.put_env("HOPLON_DIR", hoplon_dir)
+      env_dir = Path.join(hoplon_dir, "default")
+      File.mkdir_p!(env_dir)
+      File.touch!(Path.join(env_dir, "my.private.pem"))
+
+      user_inputs = """
+      n
+      """
+
+      opts = mock_input_opts(user_inputs)
+      MyKey.run(["generate"], opts)
+    end
+  end
+
+  test "user can overwrite an already existing keyfile if they decide to do so" do
+    hoplon_dir = random_tmp_directory()
+    System.put_env("HOPLON_DIR", hoplon_dir)
+    env_dir = Path.join(hoplon_dir, "default")
+    File.mkdir_p!(env_dir)
+    File.touch!(Path.join(env_dir, "my.private.pem"))
+
+    user_inputs = """
+    y
+    test%password
+    test%password
+    """
+
+    opts = mock_input_opts(user_inputs)
+    MyKey.run(["generate"], opts)
+
+    assert [
+             "hoplon_dir: #{hoplon_dir}",
+             "hoplon_env: default",
+             "Generating...",
+             "DONE!"
+           ] == get_output_lines(opts)
+
+    private_keyfile = File.read!(Path.join(hoplon_dir, "default/my.private.pem"))
+    assert private_keyfile =~ "BEGIN RSA PRIVATE KEY"
   end
 
   defp get_output_lines(opts) do

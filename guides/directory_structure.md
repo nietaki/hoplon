@@ -14,8 +14,8 @@ Hoplon caches some data on the developer's disk. Here's how it organises its dat
     default/ # "default" is the default environment name, if no other is specified
       config.exs  # contains trusted keys, and other config, like the url for the server
 
-      self.private.pem # user's password-protected private key
-      self.public.pem  # user's public key
+      my.private.pem # user's password-protected private key
+      my.public.pem  # user's public key
       
 
       peer_keys/    # contains public keys the developer interacted with
@@ -40,6 +40,6 @@ Hoplon caches some data on the developer's disk. Here's how it organises its dat
 TODO:
 - a signed file containing a list of trusted fingerprints?
   - no, it would only help if you assume your filesystem is compromised
-- do we want to store self.public.pem?
+- do we want to store my.public.pem?
   - yes, so that it can be easily shared with others
 - do we want to store self.fingerprint?

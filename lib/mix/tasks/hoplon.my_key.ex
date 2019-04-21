@@ -41,8 +41,8 @@ defmodule Mix.Tasks.Hoplon.MyKey do
     Prompt.puts("hoplon_dir: #{hoplon_dir}", opts)
     Prompt.puts("hoplon_env: #{hoplon_env}", opts)
     {:ok, _} = Tools.bootstrap_hoplon_env!(hoplon_dir, hoplon_env)
-    private_key_file = Path.join([hoplon_dir, hoplon_env, "self.private.pem"])
-    public_key_file = Path.join([hoplon_dir, hoplon_env, "self.public.pem"])
+    private_key_file = Path.join([hoplon_dir, hoplon_env, "my.private.pem"])
+    public_key_file = Path.join([hoplon_dir, hoplon_env, "my.public.pem"])
 
     if File.exists?(private_key_file) do
       sure? =
