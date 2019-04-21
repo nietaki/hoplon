@@ -20,13 +20,14 @@ defmodule Mix.Tasks.Hoplon.TrustedKeys do
   end
 
   @impl GenericTask
-  def valid_actions(), do: ~w(add remove list show)
+  # TODO show and download
+  def valid_actions(), do: ~w(add remove list)
 
   @impl GenericTask
   def option_parser_config() do
     [
       strict: [{:nickname, :string}],
-      aliases: [{:n, :name}]
+      aliases: [{:n, :nickname}]
     ]
   end
 
@@ -83,5 +84,32 @@ defmodule Mix.Tasks.Hoplon.TrustedKeys do
       {:error, reason} ->
         Mix.raise(inspect(reason))
     end
+  end
+
+  def do_task(switches, ["remove", fingerprint_or_name] = _args, opts) do
+    env_path = Tools.print_and_get_env_path(switches, opts)
+    config_file_path = Tools.config_file_path(env_path)
+    config = ConfigFile.read_or_create!(config_file_path)
+
+    trusted_keys = Map.get(config, :trusted_keys, [])
+
+    our_key? = fn key ->
+      Map.get(key, :sha_256_fingerprint) == fingerprint_or_name ||
+        Map.get(key, :nickname) == fingerprint_or_name
+    end
+
+    {removed_keys, remaining_keys} = Enum.split_with(trusted_keys, our_key?)
+
+    case removed_keys do
+      [%{sha_256_fingerprint: fingerprint}] ->
+        Prompt.puts("Removing trusted key with fingerprint #{fingerprint}", opts)
+        config = Map.put(config, :trusted_keys, remaining_keys)
+        ConfigFile.write!(config, config_file_path)
+
+      [] ->
+        Prompt.puts("No matching keys to remove", opts)
+    end
+
+    :ok
   end
 end

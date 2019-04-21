@@ -6,7 +6,7 @@ defmodule Mix.Tasks.Hoplon.MyKeyTest do
 
   # if some input/output is incorrect in the test, it's going to
   # hang waiting for input and time out, let's make it faster
-  @moduletag timeout: 5000
+  @moduletag timeout: 10_000
 
   test "generating a new key where one doesn't exist before" do
     hoplon_dir = random_tmp_directory()
