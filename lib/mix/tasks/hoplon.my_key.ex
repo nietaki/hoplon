@@ -73,7 +73,9 @@ defmodule Mix.Tasks.Hoplon.MyKey do
     File.write!(private_key_file, encoded_private_key)
     File.write!(public_key_file, encoded_public_key)
 
-    Prompt.puts("DONE!", opts)
+    fingerprint = Crypto.get_fingerprint(public_key)
+    Prompt.puts("Your public key has been saved to #{public_key_file}", opts)
+    Prompt.puts("Your key fingerprint is #{fingerprint}", opts)
 
     :ok
   end

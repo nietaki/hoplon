@@ -47,6 +47,20 @@ defmodule Hoplon.CLI.Tools do
     Path.join(env_path, "config.exs")
   end
 
+  def audit_path(env_path, package_name, package_hash, key_fingerprint) do
+    filename = "#{key_fingerprint}.audit"
+    Path.join(audit_dir(env_path, package_name, package_hash), filename)
+  end
+
+  def sig_path(env_path, package_name, package_hash, key_fingerprint) do
+    filename = "#{key_fingerprint}.sig"
+    Path.join(audit_dir(env_path, package_name, package_hash), filename)
+  end
+
+  def audit_dir(env_path, package_name, package_hash) do
+    Path.join([env_path, package_name, package_hash])
+  end
+
   def get_peer_key_path(env_path, key_fingerprint) do
     if Regex.match?(~r/^[0-9a-f]{30,}$/, key_fingerprint) do
       path = Path.join([env_path, "peer_keys", "#{key_fingerprint}.public.pem"])

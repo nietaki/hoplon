@@ -49,7 +49,6 @@ defmodule Mix.Tasks.Hoplon.Audit do
     {:ok, packages} = Hoplon.Utils.get_packages_from_mix_lock(mix_lock_path)
 
     package = Enum.find(packages, fn package -> "#{package.hex_name}" == package_name end)
-    IO.inspect(package)
 
     found_text = if package, do: "found in your mix.lock", else: "NOT found in your mix.lock"
     Prompt.puts("You're about to audit package '#{package_name}', #{found_text}", opts)
@@ -62,19 +61,15 @@ defmodule Mix.Tasks.Hoplon.Audit do
     package_hash = Prompt.for_string_with_default("Package hash", default_hash, opts)
     maybe_complain_about_nil(package_hash, "package hash")
 
-    IO.inspect({package_name, package_version, package_hash})
-
+    # TODO add options to provide these from cli
     verdict_options = ~w(dangerous suspicious lgtm safe nil)a
     verdict = Prompt.for_enum("What's the verdict?", verdict_options, opts)
-    IO.inspect(verdict)
 
     author? = Prompt.for_boolean("Are you the author of the package?", false, opts)
 
     comment =
       Prompt.for_string("Comment for the audit", opts)
       |> empty_string_to_nil()
-
-    IO.inspect(comment)
 
     private_key_path = Tools.private_key_path(env_path)
     password = Prompt.for_password("Enter password to unlock #{private_key_path}", opts)
@@ -91,10 +86,7 @@ defmodule Mix.Tasks.Hoplon.Audit do
         hash: package_hash
       )
 
-    IO.inspect(package)
-
-    timestamp = :os.system_time(:seconds)
-    IO.inspect(timestamp)
+    timestamp = DateTime.utc_now() |> DateTime.to_unix(:second)
 
     audit =
       Data.audit(
@@ -106,13 +98,20 @@ defmodule Mix.Tasks.Hoplon.Audit do
         auditedByAuthor: author?
       )
 
-    IO.inspect(audit)
-
     {:ok, encoded_audit} = Data.Encoder.encode(audit)
-    IO.inspect(encoded_audit)
 
     signature = Crypto.get_signature(encoded_audit, private_key)
-    IO.inspect(signature)
+    audit_dir = Tools.audit_dir(env_path, package_name, package_hash)
+    File.mkdir_p!(audit_dir)
+    audit_path = Tools.audit_path(env_path, package_name, package_hash, fingerprint)
+    sig_path = Tools.sig_path(env_path, package_name, package_hash, fingerprint)
+
+    File.write!(audit_path, encoded_audit)
+    File.write!(sig_path, signature)
+
+    # TODO upload? Y/n
+
+    Prompt.puts("Audit saved to #{audit_path}", opts)
   end
 
   defp maybe_complain_about_nil(nil, label) do

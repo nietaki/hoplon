@@ -21,11 +21,14 @@ defmodule Mix.Tasks.Hoplon.MyKeyTest do
     MyKey.run(["generate"], opts)
 
     assert [
-             "hoplon_dir: #{hoplon_dir}",
+             "hoplon_dir: " <> ^hoplon_dir,
              "hoplon_env: default",
              "Generating...",
-             "DONE!"
-           ] == get_output_lines(opts)
+             "Your public key has been saved to " <> public_key_path,
+             "Your key fingerprint is " <> _fingerprint
+           ] = get_output_lines(opts)
+
+    assert public_key_path == Path.join(hoplon_dir, "default/my.public.pem")
 
     private_keyfile = File.read!(Path.join(hoplon_dir, "default/my.private.pem"))
     assert private_keyfile =~ "BEGIN RSA PRIVATE KEY"
@@ -65,11 +68,12 @@ defmodule Mix.Tasks.Hoplon.MyKeyTest do
     MyKey.run(["generate"], opts)
 
     assert [
-             "hoplon_dir: #{hoplon_dir}",
+             "hoplon_dir: " <> ^hoplon_dir,
              "hoplon_env: default",
              "Generating...",
-             "DONE!"
-           ] == get_output_lines(opts)
+             _public_key_location_info,
+             _fingerprint_info
+           ] = get_output_lines(opts)
 
     private_keyfile = File.read!(Path.join(hoplon_dir, "default/my.private.pem"))
     assert private_keyfile =~ "BEGIN RSA PRIVATE KEY"

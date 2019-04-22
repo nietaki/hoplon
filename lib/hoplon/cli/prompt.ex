@@ -31,7 +31,7 @@ defmodule Hoplon.CLI.Prompt do
       |> Map.new()
 
     values_text = Map.keys(lookup_map) |> Enum.join("/")
-    prompt_text_with_options = "prompt_text (#{values_text})"
+    prompt_text_with_options = "#{prompt_text} (#{values_text})"
     response = for_string(prompt_text_with_options, opts)
 
     case Map.fetch(lookup_map, response) do
