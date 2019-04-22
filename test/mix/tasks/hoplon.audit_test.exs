@@ -80,6 +80,17 @@ defmodule Mix.Tasks.Hoplon.AuditTest do
     refute Crypto.verify_signature(audit_binary <> "1", sig_binary, public_key)
   end
 
+  test "correct error when the private key does not exist" do
+    env_dir = prepare_fresh_hoplon_env()
+    expected_message = "Can't read your private key from " <> Path.join(env_dir, "my.private.pem")
+
+    assert_raise Mix.Error, expected_message, fn ->
+      user_inputs = "\n"
+      opts = mock_input_opts(user_inputs)
+      Audit.run(["dialyxir", "--mix-lock-file", @mix_lock_path], opts)
+    end
+  end
+
   defp prepare_env_with_private_key() do
     env_dir = prepare_fresh_hoplon_env()
 

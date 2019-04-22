@@ -46,12 +46,21 @@ defmodule Mix.Tasks.Hoplon.Audit do
     env_path = Tools.print_and_get_env_path(switches, opts)
     config_file_path = Tools.config_file_path(env_path)
     _config = ConfigFile.read_or_create!(config_file_path)
-    {:ok, packages} = Hoplon.Utils.get_packages_from_mix_lock(mix_lock_path)
+
+    packages =
+      Hoplon.Utils.get_packages_from_mix_lock(mix_lock_path)
+      |> extract_or_raise("could not read the mix.lock file from #{mix_lock_path}")
 
     package = Enum.find(packages, fn package -> "#{package.hex_name}" == package_name end)
 
     found_text = if package, do: "found in your mix.lock", else: "NOT found in your mix.lock"
     Prompt.puts("You're about to audit package '#{package_name}', #{found_text}", opts)
+
+    private_key_path = Tools.private_key_path(env_path)
+
+    pem_contents =
+      File.read(private_key_path)
+      |> extract_or_raise("Can't read your private key from #{private_key_path}")
 
     default_version = get_prop(package, :version)
     package_version = Prompt.for_string_with_default("Package version", default_version, opts)
@@ -71,10 +80,12 @@ defmodule Mix.Tasks.Hoplon.Audit do
       Prompt.for_string("Comment for the audit", opts)
       |> empty_string_to_nil()
 
-    private_key_path = Tools.private_key_path(env_path)
     password = Prompt.for_password("Enter password to unlock #{private_key_path}", opts)
-    {:ok, pem_contents} = File.read(private_key_path)
-    {:ok, private_key} = Crypto.decode_private_key_from_pem(pem_contents, password)
+
+    private_key =
+      Crypto.decode_private_key_from_pem(pem_contents, password)
+      |> extract_or_raise("could not unlock the private key with this password")
+
     public_key = Crypto.build_public_key(private_key)
     fingerprint = Crypto.get_fingerprint(public_key)
 
@@ -98,7 +109,9 @@ defmodule Mix.Tasks.Hoplon.Audit do
         auditedByAuthor: author?
       )
 
-    {:ok, encoded_audit} = Data.Encoder.encode(audit)
+    encoded_audit =
+      Data.Encoder.encode(audit)
+      |> extract_or_raise("could not encode the audit")
 
     signature = Crypto.get_signature(encoded_audit, private_key)
     audit_dir = Tools.audit_dir(env_path, package_name, package_hash)
@@ -112,6 +125,14 @@ defmodule Mix.Tasks.Hoplon.Audit do
     # TODO upload? Y/n
 
     Prompt.puts("Audit saved to #{audit_path}", opts)
+  end
+
+  defp extract_or_raise({:ok, value}, _message) do
+    value
+  end
+
+  defp extract_or_raise(_error, message) do
+    Mix.raise(message)
   end
 
   defp maybe_complain_about_nil(nil, label) do
