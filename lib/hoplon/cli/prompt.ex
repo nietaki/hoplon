@@ -8,6 +8,42 @@ defmodule Hoplon.CLI.Prompt do
     strip_ending_newline(response)
   end
 
+  def for_string_with_default(prompt_text, default, opts) do
+    prompt_text = "#{prompt_text} (#{default})"
+    response = IO.gets(io_device(opts), full_prompt(prompt_text))
+    response = strip_ending_newline(response)
+
+    case response do
+      "" -> default
+      other -> other
+    end
+  end
+
+  def for_enum(prompt_text, values, opts) do
+    label = fn
+      nil -> "none"
+      value -> "#{value}"
+    end
+
+    lookup_map =
+      values
+      |> Enum.map(fn v -> {label.(v), v} end)
+      |> Map.new()
+
+    values_text = Map.keys(lookup_map) |> Enum.join("/")
+    prompt_text_with_options = "prompt_text (#{values_text})"
+    response = for_string(prompt_text_with_options, opts)
+
+    case Map.fetch(lookup_map, response) do
+      {:ok, value} ->
+        value
+
+      :error ->
+        # try again
+        for_enum(prompt_text, values, opts)
+    end
+  end
+
   def for_password(prompt, opts) do
     if Keyword.get(opts, :clean_password, true) do
       password_clean(full_prompt(prompt), opts)

@@ -99,8 +99,14 @@ defmodule Hoplon.Utils do
     end
   end
 
-  def get_packages_from_mix_lock() do
-    with {:ok, mix_lock_path} <- get_mix_lock_path() do
+  def get_packages_from_mix_lock(mix_lock_path \\ nil) do
+    mix_lock_path_tuple =
+      case mix_lock_path do
+        nil -> get_mix_lock_path()
+        path when is_binary(path) -> {:ok, mix_lock_path}
+      end
+
+    with {:ok, mix_lock_path} <- mix_lock_path_tuple do
       case File.regular?(mix_lock_path) do
         false ->
           []

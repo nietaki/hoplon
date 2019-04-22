@@ -18,14 +18,14 @@ defmodule Support.Generators do
   def input_audit() do
     gen all package <- input_package(),
             v <- optional(verdict()),
-            message <- optional(proper_string()),
+            comment <- optional(proper_string()),
             public_key_fingerprint <- proper_string(),
             created_at <- integer(),
             audited_by_author <- boolean() do
       Data.audit(
         package: package,
         verdict: v,
-        message: message,
+        comment: comment,
         publicKeyFingerprint: public_key_fingerprint,
         createdAt: created_at,
         auditedByAuthor: audited_by_author

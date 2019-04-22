@@ -31,23 +31,31 @@ defmodule Hoplon.CLI.GenericTask do
   def run(task_module, argv, opts) do
     op_config = add_default_op_config(task_module.option_parser_config())
 
-    valid_actions = task_module.valid_actions()
-
     case OptionParser.parse(argv, op_config) do
       {_parsed, _args, invalid = [_ | _]} ->
-        msg = invalid_switches_message(invalid)
-        Mix.raise(msg)
+        invalid_switches_message(invalid)
+        |> Mix.raise()
 
-      {_parsed, [], []} ->
+      {switches, args, _invalid = []} ->
+        check_action!(task_module, List.first(args))
+        switches = add_default_switch_values(switches, task_module.default_switch_values())
+        task_module.do_task(switches, args, opts)
+    end
+  end
+
+  defp check_action!(module, first_arg) do
+    case {module.valid_actions(), first_arg} do
+      {none, _} when none in [nil, []] ->
+        :ok
+
+      {valid_actions, nil} ->
         Mix.raise(missing_action_message(valid_actions))
 
-      {switches, args = [a | _rest], _invalid = []} ->
-        if a in valid_actions do
-          switches = add_default_switch_values(switches, task_module.default_switch_values())
-
-          task_module.do_task(switches, args, opts)
+      {valid_actions, action} when is_list(valid_actions) ->
+        if action in valid_actions do
+          :ok
         else
-          Mix.raise(invalid_action_message(a, valid_actions))
+          Mix.raise(invalid_action_message(first_arg, valid_actions))
         end
     end
   end

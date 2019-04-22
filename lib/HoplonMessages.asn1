@@ -35,7 +35,7 @@ Verdict ::= [1] ENUMERATED {
 Audit ::= [2] SEQUENCE {
   package Package,
   verdict Verdict OPTIONAL,
-  message UTF8String OPTIONAL,
+  comment UTF8String OPTIONAL,
   publicKeyFingerprint UTF8String,
   -- Unix TIME
   createdAt INTEGER,
