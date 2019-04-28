@@ -114,17 +114,33 @@ defmodule Mix.Tasks.Hoplon.Audit do
       |> extract_or_raise("could not encode the audit")
 
     signature = Crypto.get_signature(encoded_audit, private_key)
+    {:ok, _} = create_audit_files(env_path, audit, signature)
+
+    # TODO upload? Y/n
+
+    audit_path = Tools.audit_path(env_path, package_name, package_hash, fingerprint)
+    Prompt.puts("Audit saved to #{audit_path}", opts)
+  end
+
+  def create_audit_files(env_path, audit, signature) do
+    fingerprint = Data.audit(audit, :publicKeyFingerprint)
+    package = Data.audit(audit, :package)
+    package_name = Data.package(package, :name)
+    package_hash = Data.package(package, :hash)
     audit_dir = Tools.audit_dir(env_path, package_name, package_hash)
+
     File.mkdir_p!(audit_dir)
     audit_path = Tools.audit_path(env_path, package_name, package_hash, fingerprint)
     sig_path = Tools.sig_path(env_path, package_name, package_hash, fingerprint)
 
+    encoded_audit =
+      Data.Encoder.encode(audit)
+      |> extract_or_raise("could not encode the audit")
+
     File.write!(audit_path, encoded_audit)
     File.write!(sig_path, signature)
 
-    # TODO upload? Y/n
-
-    Prompt.puts("Audit saved to #{audit_path}", opts)
+    {:ok, :done}
   end
 
   defp extract_or_raise({:ok, value}, _message) do

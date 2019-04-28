@@ -59,37 +59,15 @@ defmodule Mix.Tasks.Hoplon.TrustedKeys do
 
   def do_task(switches, ["add", path] = _args, opts) do
     env_path = Tools.print_and_get_env_path(switches, opts)
-    config_file_path = Tools.config_file_path(env_path)
-    config = ConfigFile.read_or_create!(config_file_path)
 
     with Prompt.puts("Reading public key at #{path}...", opts),
          {:ok, public_key_pem} <- File.read(path),
          Prompt.puts("Decoding from PEM format...", opts),
-         {:ok, public_key} <- Crypto.decode_public_key_from_pem(public_key_pem),
-         fingerprint = Crypto.get_fingerprint(public_key, :sha256),
+         {:ok, fingerprint} <- add_pem_to_peer_keys(env_path, public_key_pem),
          Prompt.puts("Decoded, the sha256 fingerprint is #{fingerprint}", opts),
-         {:ok, target_key_path} = Tools.get_peer_key_path(env_path, fingerprint),
-         :ok <- File.write(target_key_path, public_key_pem, [:write]) do
-      trusted_keys = Map.get(config, :trusted_keys, [])
-
-      key_entry = %{sha_256_fingerprint: fingerprint}
-
-      key_entry =
-        case Keyword.get(switches, :nickname) do
-          nil ->
-            key_entry
-
-          nickname when is_binary(nickname) ->
-            Map.put(key_entry, :nickname, nickname)
-        end
-
-      trusted_keys =
-        [key_entry | trusted_keys]
-        |> Enum.uniq_by(& &1.sha_256_fingerprint)
-
-      config = Map.put(config, :trusted_keys, trusted_keys)
-      ConfigFile.write!(config, config_file_path)
-
+         maybe_nickname = Keyword.get(switches, :nickname),
+         {:ok, _} <- add_trusted_key_fingerprint_to_config(env_path, fingerprint, maybe_nickname) do
+      config_file_path = Tools.config_file_path(env_path)
       Prompt.puts("Trusted key added to #{config_file_path}", opts)
       :ok
     else
@@ -123,5 +101,43 @@ defmodule Mix.Tasks.Hoplon.TrustedKeys do
     end
 
     :ok
+  end
+
+  # TODO list next, to get the infrastructure for getting out the trusted keys
+  # next, get similar infrastructure for getting valid audits for: {[{package, hash | :all}] | :all, [fingerprint] | :all}
+  # (that should do the verification)
+
+  def add_trusted_key_fingerprint_to_config(env_path, fingerprint, maybe_nickname) do
+    config_file_path = Tools.config_file_path(env_path)
+    config = ConfigFile.read_or_create!(config_file_path)
+    trusted_keys = Map.get(config, :trusted_keys, [])
+
+    key_entry = %{sha_256_fingerprint: fingerprint}
+
+    key_entry =
+      case maybe_nickname do
+        nil ->
+          key_entry
+
+        nickname when is_binary(nickname) ->
+          Map.put(key_entry, :nickname, nickname)
+      end
+
+    trusted_keys =
+      [key_entry | trusted_keys]
+      |> Enum.uniq_by(& &1.sha_256_fingerprint)
+
+    config = Map.put(config, :trusted_keys, trusted_keys)
+    ConfigFile.write!(config, config_file_path)
+    {:ok, config}
+  end
+
+  def add_pem_to_peer_keys(env_path, public_key_pem) do
+    with {:ok, public_key} <- Crypto.decode_public_key_from_pem(public_key_pem),
+         fingerprint = Crypto.get_fingerprint(public_key, :sha256),
+         {:ok, target_key_path} = Tools.get_peer_key_path(env_path, fingerprint),
+         :ok <- File.write(target_key_path, public_key_pem, [:write]) do
+      {:ok, fingerprint}
+    end
   end
 end
