@@ -2,12 +2,14 @@ defmodule Mix.Tasks.Hoplon.Status do
   use Mix.Task
 
   alias Hoplon.CLI.GenericTask
-  alias Hoplon.CLI.Prompt
+  # alias Hoplon.CLI.Prompt
   alias Hoplon.Crypto
   alias Hoplon.CLI.Tools
   alias Hoplon.CLI.ConfigFile
   require Hoplon.Data
   alias Hoplon.Data
+  alias Hoplon.Data.Encoder
+  alias Hoplon.HexPackage
 
   @behaviour GenericTask
 
@@ -44,13 +46,28 @@ defmodule Mix.Tasks.Hoplon.Status do
     mix_lock_path = Keyword.get(switches, :mix_lock_file)
     env_path = Tools.print_and_get_env_path(switches, opts)
     config_file_path = Tools.config_file_path(env_path)
-    _config = ConfigFile.read_or_create!(config_file_path)
+    config = ConfigFile.read_or_create!(config_file_path)
 
+    # TODO only get used packages, not all from mix lock
     packages =
       Hoplon.Utils.get_packages_from_mix_lock(mix_lock_path)
       |> Tools.extract_or_raise("could not read the mix.lock file from #{mix_lock_path}")
 
     IO.inspect(packages)
+
+    trusted_keys = get_trusted_public_keys(env_path, config, true)
+    IO.inspect(trusted_keys)
+
+    package_audits =
+      Enum.map(
+        packages,
+        fn p ->
+          audits = get_verified_audits_for_package(env_path, p, trusted_keys)
+          {p, audits}
+        end
+      )
+
+    IO.inspect(package_audits)
   end
 
   @spec get_trusted_public_keys(env_path :: String.t(), %{}, include_self? :: boolean) :: %{
@@ -103,6 +120,61 @@ defmodule Mix.Tasks.Hoplon.Status do
     end
   end
 
-  defp nil_to_asn1_novalue(nil), do: :asn1_NOVALUE
-  defp nil_to_asn1_novalue(value), do: value
+  def get_verified_audits_for_package(env_path, package, relevant_keys) do
+    # keys is fingerprint -> public_key
+    %HexPackage{hex_name: name, hash: hash} = package
+    audit_dir = Tools.audit_dir(env_path, Atom.to_string(name), hash)
+
+    if File.dir?(audit_dir) do
+      {:ok, files} = File.ls(audit_dir)
+
+      relevant_keys
+      |> Enum.filter(fn {f, _k} ->
+        "#{f}.audit" in files && "#{f}.sig" in files
+      end)
+      |> Enum.map(fn {f, k} ->
+        audit = read_and_verify_audit_signature(audit_dir, f, k)
+        :ok = verify_audit_matches_package(audit, package, f)
+        audit
+      end)
+    else
+      []
+    end
+  end
+
+  defp read_and_verify_audit_signature(audit_dir, fingerprint, public_key) do
+    ^fingerprint = Crypto.get_fingerprint(public_key)
+    {:ok, audit_binary} = File.read(Path.join(audit_dir, "#{fingerprint}.audit"))
+    {:ok, sig_binary} = File.read(Path.join(audit_dir, "#{fingerprint}.sig"))
+    true = Crypto.verify_signature(audit_binary, sig_binary, public_key)
+
+    {:ok, audit} = Encoder.decode(audit_binary, :Audit)
+
+    audit
+  end
+
+  def verify_audit_matches_package(audit, package, expected_fingerprint) do
+    %HexPackage{hex_name: name, hash: hash} = package
+    audit_package = Data.audit(audit, :package)
+
+    cond do
+      Data.audit(audit, :publicKeyFingerprint) != expected_fingerprint ->
+        {:error, :fingerprint_mismatch}
+
+      Data.package(audit_package, :name) != Atom.to_string(name) ->
+        {:error, :package_name_mismatch}
+
+      Data.package(audit_package, :hash) != hash ->
+        {:error, :package_hash_mismatch}
+
+      Data.package(audit_package, :ecosystem) != "hexpm" ->
+        {:error, :invalid_ecosystem}
+
+      true ->
+        :ok
+    end
+  end
+
+  # defp nil_to_asn1_novalue(nil), do: :asn1_NOVALUE
+  # defp nil_to_asn1_novalue(value), do: value
 end
