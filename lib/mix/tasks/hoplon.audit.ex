@@ -49,7 +49,7 @@ defmodule Mix.Tasks.Hoplon.Audit do
 
     packages =
       Hoplon.Utils.get_packages_from_mix_lock(mix_lock_path)
-      |> extract_or_raise("could not read the mix.lock file from #{mix_lock_path}")
+      |> Tools.extract_or_raise("could not read the mix.lock file from #{mix_lock_path}")
 
     package = Enum.find(packages, fn package -> "#{package.hex_name}" == package_name end)
 
@@ -60,7 +60,7 @@ defmodule Mix.Tasks.Hoplon.Audit do
 
     pem_contents =
       File.read(private_key_path)
-      |> extract_or_raise("Can't read your private key from #{private_key_path}")
+      |> Tools.extract_or_raise("Can't read your private key from #{private_key_path}")
 
     default_version = get_prop(package, :version)
     package_version = Prompt.for_string_with_default("Package version", default_version, opts)
@@ -84,7 +84,7 @@ defmodule Mix.Tasks.Hoplon.Audit do
 
     private_key =
       Crypto.decode_private_key_from_pem(pem_contents, password)
-      |> extract_or_raise("could not unlock the private key with this password")
+      |> Tools.extract_or_raise("could not unlock the private key with this password")
 
     public_key = Crypto.build_public_key(private_key)
     fingerprint = Crypto.get_fingerprint(public_key)
@@ -111,7 +111,7 @@ defmodule Mix.Tasks.Hoplon.Audit do
 
     encoded_audit =
       Data.Encoder.encode(audit)
-      |> extract_or_raise("could not encode the audit")
+      |> Tools.extract_or_raise("could not encode the audit")
 
     signature = Crypto.get_signature(encoded_audit, private_key)
     {:ok, _} = create_audit_files(env_path, audit, signature)
@@ -135,20 +135,12 @@ defmodule Mix.Tasks.Hoplon.Audit do
 
     encoded_audit =
       Data.Encoder.encode(audit)
-      |> extract_or_raise("could not encode the audit")
+      |> Tools.extract_or_raise("could not encode the audit")
 
     File.write!(audit_path, encoded_audit)
     File.write!(sig_path, signature)
 
     {:ok, :done}
-  end
-
-  defp extract_or_raise({:ok, value}, _message) do
-    value
-  end
-
-  defp extract_or_raise(_error, message) do
-    Mix.raise(message)
   end
 
   defp maybe_complain_about_nil(nil, label) do

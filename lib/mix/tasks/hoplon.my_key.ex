@@ -59,12 +59,22 @@ defmodule Mix.Tasks.Hoplon.MyKey do
     confirmation = Prompt.for_password("Confirm password for the key", opts)
 
     if password != confirmation do
-      IO.inspect({password, confirmation})
       Mix.raise("Passwords don't match!")
     end
 
     Prompt.puts("Generating...", opts)
 
+    {:ok, _private_key, public_key} = generate(env_path, password)
+    fingerprint = Crypto.get_fingerprint(public_key)
+    Prompt.puts("Your public key has been saved to #{public_key_file}", opts)
+    Prompt.puts("Your key fingerprint is #{fingerprint}", opts)
+
+    :ok
+  end
+
+  def generate(env_path, password) do
+    private_key_file = Tools.private_key_path(env_path)
+    public_key_file = Tools.public_key_path(env_path)
     private_key = Crypto.generate_private_key()
     public_key = Crypto.build_public_key(private_key)
     {:ok, encoded_private_key} = Crypto.encode_private_key_to_pem(private_key, password)
@@ -72,11 +82,6 @@ defmodule Mix.Tasks.Hoplon.MyKey do
 
     File.write!(private_key_file, encoded_private_key)
     File.write!(public_key_file, encoded_public_key)
-
-    fingerprint = Crypto.get_fingerprint(public_key)
-    Prompt.puts("Your public key has been saved to #{public_key_file}", opts)
-    Prompt.puts("Your key fingerprint is #{fingerprint}", opts)
-
-    :ok
+    {:ok, private_key, public_key}
   end
 end

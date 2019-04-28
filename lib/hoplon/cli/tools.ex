@@ -78,4 +78,12 @@ defmodule Hoplon.CLI.Tools do
     Prompt.puts("hoplon_env: #{hoplon_env}", opts)
     bootstrap_hoplon_env!(hoplon_dir, hoplon_env)
   end
+
+  def extract_or_raise({:ok, value}, _message) do
+    value
+  end
+
+  def extract_or_raise(_error, message) do
+    Mix.raise(message)
+  end
 end

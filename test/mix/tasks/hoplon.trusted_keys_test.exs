@@ -6,6 +6,7 @@ defmodule Mix.Tasks.Hoplon.TrustedKeysTest do
   @moduletag timeout: 10_000
 
   describe "add action" do
+    @tag :focus
     test "adding a trusted key" do
       {fingerprint, key_path, public_pem} = generate_random_public_key()
       env_dir = prepare_fresh_hoplon_env()
@@ -185,21 +186,5 @@ defmodule Mix.Tasks.Hoplon.TrustedKeysTest do
 
       assert "| #{fingerprint} | my friend |" == last_row
     end
-  end
-
-  defp generate_random_public_key() do
-    alias Hoplon.Crypto
-    private_key = Crypto.generate_private_key()
-    public_key = Crypto.build_public_key(private_key)
-
-    fingerprint = Crypto.get_fingerprint(public_key)
-    {:ok, public_pem} = Crypto.encode_public_key_to_pem(public_key)
-    dir = "/tmp/hoplon_tests/random_public_keys"
-    File.mkdir_p!(dir)
-
-    key_name = "#{random_string()}.pem"
-    path = Path.join(dir, key_name)
-    File.write!(path, public_pem)
-    {fingerprint, path, public_pem}
   end
 end

@@ -10,7 +10,6 @@ defmodule Mix.Tasks.Hoplon.AuditTest do
 
   use ExUnit.Case, async: false
   @moduletag timeout: 10_000
-  @moduletag :current
 
   @password "1337_P455wort"
   @comment "no comments!"
@@ -20,7 +19,10 @@ defmodule Mix.Tasks.Hoplon.AuditTest do
   @dialyxir_hash "78e97d9c0ff1b5521dd68041193891aebebce52fc3b93463c0a6806874557d7d"
 
   test "happy path" do
-    %{fingerprint: fingerprint, public_key_path: public_key_path} = prepare_env_with_private_key()
+    %{
+      fingerprint: fingerprint,
+      public_key: public_key
+    } = prepare_env_with_private_key()
 
     before = DateTime.utc_now() |> DateTime.to_unix(:second)
 
@@ -75,7 +77,6 @@ defmodule Mix.Tasks.Hoplon.AuditTest do
 
     audit_binary = File.read!(audit_path)
     sig_binary = File.read!(sig_path)
-    {:ok, public_key} = File.read!(public_key_path) |> Crypto.decode_public_key_from_pem()
     assert Crypto.verify_signature(audit_binary, sig_binary, public_key)
     refute Crypto.verify_signature(audit_binary <> "1", sig_binary, public_key)
   end
@@ -92,28 +93,18 @@ defmodule Mix.Tasks.Hoplon.AuditTest do
   end
 
   defp prepare_env_with_private_key() do
+    alias Hoplon.CLI.Tools
+    alias Mix.Tasks.Hoplon.MyKey
     env_dir = prepare_fresh_hoplon_env()
 
-    user_inputs = """
-    #{@password}
-    #{@password}
-    """
-
-    opts = mock_input_opts(user_inputs)
-
-    # this depends on the other task a bit, but it's the cleanest simple solution, I think
-    alias Mix.Tasks.Hoplon.MyKey
-    MyKey.run(["generate"], opts)
-    output_lines = get_output_lines(opts)
-
-    [
-      "Your public key has been saved to " <> public_key_path,
-      "Your key fingerprint is " <> fingerprint
-    ] = Enum.take(output_lines, -2)
+    {:ok, _private_key, public_key} = MyKey.generate(env_dir, @password)
+    public_key_path = Tools.public_key_path(env_dir)
+    fingerprint = Crypto.get_fingerprint(public_key)
 
     %{
       env_dir: env_dir,
       fingerprint: fingerprint,
+      public_key: public_key,
       public_key_path: public_key_path
     }
   end
