@@ -2,6 +2,8 @@ defmodule Support.Utils do
   alias Hoplon.Data
   require Hoplon.Data
   alias Hoplon.Data.Encoder
+  alias Hoplon.CLI.Tools
+  alias Hoplon.Crypto
 
   def random_string(length \\ 12) do
     :crypto.strong_rand_bytes(length)
@@ -120,10 +122,30 @@ defmodule Support.Utils do
     {:ok, encoded_package} = Encoder.encode(package)
 
     %{
+      package_name: values[:name],
+      package_hash: values[:hash],
       package: package,
       audit: audit,
       encoded_audit: encoded_audit,
       encoded_package: encoded_package
     }
+  end
+
+  def store_signed_audit(env_dir, audit, key) do
+    signature = Crypto.get_signature(audit.encoded_audit, key.private_key)
+    package_name = audit.package_name
+    package_hash = audit.package_hash
+    fingerprint = key.fingerprint
+
+    audit_dir = Tools.audit_dir(env_dir, package_name, package_hash)
+    :ok = File.mkdir_p(audit_dir)
+
+    audit_path = Tools.audit_path(env_dir, package_name, package_hash, fingerprint)
+    sig_path = Tools.sig_path(env_dir, package_name, package_hash, fingerprint)
+
+    :ok = File.write(audit_path, audit.encoded_audit)
+    :ok = File.write(sig_path, signature)
+
+    {:ok, signature}
   end
 end

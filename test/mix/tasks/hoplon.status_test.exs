@@ -1,5 +1,4 @@
 defmodule Mix.Tasks.Hoplon.StatusTest do
-  alias Mix.Tasks.Hoplon.Audit
   alias Mix.Tasks.Hoplon.Status
   alias Mix.Tasks.Hoplon.TrustedKeys
   alias Hoplon.Crypto
@@ -38,22 +37,23 @@ defmodule Mix.Tasks.Hoplon.StatusTest do
     version: "0.20.1"
   }
 
-  # test "happy path" do
-  #   %{
-  #     env_dir: env_dir,
-  #     public_key: public_key,
-  #     fingerprint: fingerprint
-  #   } = prepare_env_with_private_key()
+  test "happy path" do
+    %{
+      env_dir: env_dir,
+      public_key: public_key,
+      fingerprint: fingerprint
+    } = prepare_env_with_private_key()
 
-  #   user_inputs = "\n"
-  #   opts = mock_input_opts(user_inputs)
+    user_inputs = "\n"
+    opts = mock_input_opts(user_inputs)
 
-  #   Status.run(["--mix-lock-file", @mix_lock_path], opts)
-  #   output_lines = get_output_lines(opts)
-  #   flunk "TODO assertions"
-  # end
+    Status.run(["--mix-lock-file", @mix_lock_path], opts)
+    output_lines = get_output_lines(opts)
+    flunk("TODO assertions")
+  end
 
   describe "get_verified_audits_for_package" do
+    @tag :focus
     test "picks up a correct signed audit" do
       %{env_dir: env_dir} = prepare_env_with_private_key()
 
@@ -61,19 +61,14 @@ defmodule Mix.Tasks.Hoplon.StatusTest do
       add_test_key_to_trusted_keys(env_dir, other_key)
 
       a = create_audit("dialyxir", @dialyxir_hash, :safe, other_key.fingerprint)
-      signature = Crypto.get_signature(a.encoded_audit, other_key.private_key)
+      {:ok, _} = store_signed_audit(env_dir, a, other_key)
 
-      {:ok, _} = Audit.create_audit_files(env_dir, a.audit, a.encoded_audit, signature)
       relevant_keys = %{other_key.fingerprint => other_key.public_key}
 
       assert [a.audit] ==
                Status.get_verified_audits_for_package(env_dir, @dialyxir_package, relevant_keys)
 
       assert [] == Status.get_verified_audits_for_package(env_dir, @ex_doc_package, relevant_keys)
-    end
-
-    test "TODO" do
-      flunk("add helpers for adding signed audits to user's audits")
     end
   end
 
