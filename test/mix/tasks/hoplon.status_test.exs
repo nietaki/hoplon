@@ -48,14 +48,12 @@ defmodule Mix.Tasks.Hoplon.StatusTest do
     user_inputs = "\n"
     opts = mock_input_opts(user_inputs)
 
-    reason = catch_exit(
-      Status.run(["--mix-lock-file", @mix_lock_path], opts)
-    )
+    reason = catch_exit(Status.run(["--mix-lock-file", @mix_lock_path], opts))
     # TODO good exit code
     assert {:shutdown, 13} = reason
 
     output_lines = get_output_lines(opts)
-    IO.inspect output_lines
+    IO.inspect(output_lines)
   end
 
   @tag :focus
@@ -80,7 +78,7 @@ defmodule Mix.Tasks.Hoplon.StatusTest do
     Status.run(["--mix-lock-file", @mix_lock_path], opts)
 
     output_lines = get_output_lines(opts)
-    IO.inspect output_lines
+    IO.inspect(output_lines)
   end
 
   describe "get_verified_audits_for_package" do

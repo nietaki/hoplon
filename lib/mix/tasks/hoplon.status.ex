@@ -67,7 +67,8 @@ defmodule Mix.Tasks.Hoplon.Status do
       )
 
     IO.inspect(package_audits)
-    if Enum.all?(package_audits, & package_accepted?(&1, switches)) do
+
+    if Enum.all?(package_audits, &package_accepted?(&1, switches)) do
       Prompt.puts("All packages accepted", opts)
     else
       Prompt.puts("Some packages failed the check", opts)
@@ -76,7 +77,7 @@ defmodule Mix.Tasks.Hoplon.Status do
   end
 
   def package_accepted?({_package = %Hoplon.HexPackage{}, audits}, _switches) do
-    #simple logic for now, should be configurable
+    # simple logic for now, should be configurable
     Enum.any?(audits, fn audit -> Data.audit(audit, :verdict) in [:safe, :lgtm] end)
   end
 
