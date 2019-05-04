@@ -79,7 +79,7 @@ defmodule Hoplon.DataTest do
         Data.audit(
           package: package,
           verdict: :safe,
-          message: "took me 10 hours",
+          comment: "took me 10 hours",
           publicKeyFingerprint: "dummy",
           createdAt: 1_554_670_254,
           auditedByAuthor: false
