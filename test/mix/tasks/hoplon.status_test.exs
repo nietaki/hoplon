@@ -16,7 +16,7 @@ defmodule Mix.Tasks.Hoplon.StatusTest do
   @password "1337_P455wort"
   # @comment "no comments!"
   # @verdict :safe
-  # @mix_lock_path "test/assets/sample.mix.lock"
+  @mix_lock_path "test/assets/simple.mix.lock"
 
   # @dialyxir_version "1.0.0-rc.6"
   @dialyxir_hash "78e97d9c0ff1b5521dd68041193891aebebce52fc3b93463c0a6806874557d7d"
@@ -37,19 +37,50 @@ defmodule Mix.Tasks.Hoplon.StatusTest do
     version: "0.20.1"
   }
 
-  test "happy path" do
-    %{
-      env_dir: env_dir,
-      public_key: public_key,
-      fingerprint: fingerprint
-    } = prepare_env_with_private_key()
+  @earmark_hash "b840562ea3d67795ffbb5bd88940b1bed0ed9fa32834915125ea7d02e35888a5"
+  @ex_doc_hash "88eaa16e67c505664fd6a66f42ddb962d424ad68df586b214b71443c69887123"
+  @makeup_elixir_hash "be7a477997dcac2e48a9d695ec730b2d22418292675c75aa2d34ba0909dcdeda"
+
+  @tag :focus
+  test "no audits present" do
+    %{} = prepare_env_with_private_key()
 
     user_inputs = "\n"
     opts = mock_input_opts(user_inputs)
 
-    Status.run(["--mix-lock-file", @mix_lock_path], opts)
+    reason = catch_exit(
+      Status.run(["--mix-lock-file", @mix_lock_path], opts)
+    )
+    # TODO good exit code
+    assert {:shutdown, 13} = reason
+
     output_lines = get_output_lines(opts)
-    flunk("TODO assertions")
+    IO.inspect output_lines
+  end
+
+  @tag :focus
+  test "necessary audits present" do
+    %{env_dir: env_dir} = prepare_env_with_private_key()
+
+    user_inputs = "\n"
+    opts = mock_input_opts(user_inputs)
+
+    other_key = test_key()
+    add_test_key_to_trusted_keys(env_dir, other_key)
+
+    a = create_audit("earmark", @earmark_hash, :safe, other_key.fingerprint)
+    {:ok, _} = store_signed_audit(env_dir, a, other_key)
+
+    a = create_audit("ex_doc", @ex_doc_hash, :safe, other_key.fingerprint)
+    {:ok, _} = store_signed_audit(env_dir, a, other_key)
+
+    a = create_audit("makeup_elixir", @makeup_elixir_hash, :lgtm, other_key.fingerprint)
+    {:ok, _} = store_signed_audit(env_dir, a, other_key)
+
+    Status.run(["--mix-lock-file", @mix_lock_path], opts)
+
+    output_lines = get_output_lines(opts)
+    IO.inspect output_lines
   end
 
   describe "get_verified_audits_for_package" do

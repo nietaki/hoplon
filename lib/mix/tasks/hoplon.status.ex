@@ -10,6 +10,7 @@ defmodule Mix.Tasks.Hoplon.Status do
   alias Hoplon.Data
   alias Hoplon.Data.Encoder
   alias Hoplon.HexPackage
+  alias Hoplon.CLI.Prompt
 
   @behaviour GenericTask
 
@@ -53,8 +54,6 @@ defmodule Mix.Tasks.Hoplon.Status do
       Hoplon.Utils.get_packages_from_mix_lock(mix_lock_path)
       |> Tools.extract_or_raise("could not read the mix.lock file from #{mix_lock_path}")
 
-    IO.inspect(packages)
-
     trusted_keys = get_trusted_public_keys(env_path, config, true)
     IO.inspect(trusted_keys)
 
@@ -68,6 +67,17 @@ defmodule Mix.Tasks.Hoplon.Status do
       )
 
     IO.inspect(package_audits)
+    if Enum.all?(package_audits, & package_accepted?(&1, switches)) do
+      Prompt.puts("All packages accepted", opts)
+    else
+      Prompt.puts("Some packages failed the check", opts)
+      exit({:shutdown, 13})
+    end
+  end
+
+  def package_accepted?({_package = %Hoplon.HexPackage{}, audits}, _switches) do
+    #simple logic for now, should be configurable
+    Enum.any?(audits, fn audit -> Data.audit(audit, :verdict) in [:safe, :lgtm] end)
   end
 
   @spec get_trusted_public_keys(env_path :: String.t(), %{}, include_self? :: boolean) :: %{
