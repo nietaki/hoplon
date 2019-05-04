@@ -55,7 +55,6 @@ defmodule Mix.Tasks.Hoplon.Status do
       |> Tools.extract_or_raise("could not read the mix.lock file from #{mix_lock_path}")
 
     trusted_keys = get_trusted_public_keys(env_path, config, true)
-    IO.inspect(trusted_keys)
 
     package_audits =
       Enum.map(
@@ -66,14 +65,33 @@ defmodule Mix.Tasks.Hoplon.Status do
         end
       )
 
-    IO.inspect(package_audits)
+    stats = Enum.map(package_audits, &package_stats(&1, switches))
+    headers = ~w(name version dangerous_count suspicious_count lgtm_count safe_count)a
+    rows = Enum.map(stats, fn map -> Enum.map(headers, &Map.get(map, &1)) end)
+    Prompt.print_table(headers, rows, opts)
 
     if Enum.all?(package_audits, &package_accepted?(&1, switches)) do
       Prompt.puts("All packages accepted", opts)
+      :ok
     else
       Prompt.puts("Some packages failed the check", opts)
       exit({:shutdown, 13})
     end
+  end
+
+  def package_stats({package = %Hoplon.HexPackage{}, audits}, _switches) do
+    %{
+      name: package.name,
+      version: package.version,
+      dangerous_count: get_verdict_count(audits, :dangerous),
+      suspicious_count: get_verdict_count(audits, :suspicious),
+      lgtm_count: get_verdict_count(audits, :lgtm),
+      safe_count: get_verdict_count(audits, :safe)
+    }
+  end
+
+  defp get_verdict_count(audits, verdict) when is_atom(verdict) do
+    Enum.count(audits, fn audit -> Data.audit(audit, :verdict) == verdict end)
   end
 
   def package_accepted?({_package = %Hoplon.HexPackage{}, audits}, _switches) do

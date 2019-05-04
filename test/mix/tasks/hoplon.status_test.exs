@@ -52,8 +52,7 @@ defmodule Mix.Tasks.Hoplon.StatusTest do
     # TODO good exit code
     assert {:shutdown, 13} = reason
 
-    output_lines = get_output_lines(opts)
-    IO.inspect(output_lines)
+    _output_lines = get_output_lines(opts)
   end
 
   @tag :focus
@@ -75,10 +74,9 @@ defmodule Mix.Tasks.Hoplon.StatusTest do
     a = create_audit("makeup_elixir", @makeup_elixir_hash, :lgtm, other_key.fingerprint)
     {:ok, _} = store_signed_audit(env_dir, a, other_key)
 
-    Status.run(["--mix-lock-file", @mix_lock_path], opts)
+    assert :ok = Status.run(["--mix-lock-file", @mix_lock_path], opts)
 
-    output_lines = get_output_lines(opts)
-    IO.inspect(output_lines)
+    _output_lines = get_output_lines(opts)
   end
 
   describe "get_verified_audits_for_package" do
