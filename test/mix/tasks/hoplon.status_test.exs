@@ -11,8 +11,6 @@ defmodule Mix.Tasks.Hoplon.StatusTest do
 
   use ExUnit.Case, async: false
   @moduletag timeout: 10_000
-  @moduletag :current
-
   @password "1337_P455wort"
   # @comment "no comments!"
   # @verdict :safe
@@ -41,7 +39,6 @@ defmodule Mix.Tasks.Hoplon.StatusTest do
   @ex_doc_hash "88eaa16e67c505664fd6a66f42ddb962d424ad68df586b214b71443c69887123"
   @makeup_elixir_hash "be7a477997dcac2e48a9d695ec730b2d22418292675c75aa2d34ba0909dcdeda"
 
-  @tag :focus
   test "no audits present" do
     %{} = prepare_env_with_private_key()
 
@@ -49,13 +46,11 @@ defmodule Mix.Tasks.Hoplon.StatusTest do
     opts = mock_input_opts(user_inputs)
 
     reason = catch_exit(Status.run(["--mix-lock-file", @mix_lock_path], opts))
-    # TODO good exit code
     assert {:shutdown, 13} = reason
 
     _output_lines = get_output_lines(opts)
   end
 
-  @tag :focus
   test "necessary audits present" do
     %{env_dir: env_dir} = prepare_env_with_private_key()
 
@@ -80,7 +75,6 @@ defmodule Mix.Tasks.Hoplon.StatusTest do
   end
 
   describe "get_verified_audits_for_package" do
-    @tag :focus
     test "picks up a correct signed audit" do
       %{env_dir: env_dir} = prepare_env_with_private_key()
 

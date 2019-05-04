@@ -6,7 +6,6 @@ defmodule Mix.Tasks.Hoplon.TrustedKeysTest do
   @moduletag timeout: 10_000
 
   describe "add action" do
-    @tag :focus
     test "adding a trusted key" do
       {fingerprint, key_path, public_pem} = generate_random_public_key()
       env_dir = prepare_fresh_hoplon_env()
