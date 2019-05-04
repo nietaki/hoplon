@@ -63,8 +63,8 @@ defmodule Mix.Tasks.Hoplon.MyKeyTest do
     MyKey.run(["generate"], opts)
 
     assert [
-             "hoplon_dir: " <> hoplon_dir,
-             "hoplon_env: " <> hoplon_env,
+             "hoplon_dir: " <> _hoplon_dir,
+             "hoplon_env: " <> _hoplon_env,
              "Generating...",
              _public_key_location_info,
              _fingerprint_info
