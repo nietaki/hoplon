@@ -22,7 +22,7 @@ defmodule Hoplon.MixProject do
       deps: deps(),
       elixirc_paths: elixirc_paths(Mix.env()),
       elixirc_options: [
-        warnings_as_errors: true
+        # warnings_as_errors: true
       ],
       source_url: "https://github.com/nietaki/hoplon",
       docs: docs(),
@@ -47,7 +47,8 @@ defmodule Hoplon.MixProject do
     [
       {:dialyxir, "~> 1.0.0-rc4", only: [:dev, :test], optional: true, runtime: false},
       {:stream_data, "~> 0.4.2", only: :test},
-      {:ex_doc, ">= 0.0.1", only: [:dev, :test], optional: true, runtime: false}
+      {:ex_doc, ">= 0.0.1", only: [:dev, :test], optional: true, runtime: false},
+      {:jason, ">= 1.0.0"}
     ]
   end
 
