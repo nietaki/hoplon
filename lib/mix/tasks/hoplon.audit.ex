@@ -117,6 +117,23 @@ defmodule Mix.Tasks.Hoplon.Audit do
     {:ok, _} = create_audit_files(env_path, audit, encoded_audit, signature)
 
     # TODO upload? Y/n
+    # TODO configurable api client for tests
+    # TODO url configurable in the environment
+
+    # uploading audit
+    audit_hex = Crypto.hex_encode!(encoded_audit)
+    signature_hex = Crypto.hex_encode!(signature)
+    {:ok, public_key_pem} = Crypto.encode_public_key_to_pem(public_key)
+
+    params = %{
+      audit_hex: audit_hex,
+      signature_hex: signature_hex,
+      public_key_pem: public_key_pem
+    }
+
+    base = "https://hoplon-server.gigalixirapp.com"
+
+    {:ok, {200, _headers, _body}} = Hoplon.ApiClient.post(base, "audits/upload", [], params)
 
     audit_path = Tools.audit_path(env_path, package_name, package_hash, fingerprint)
     Prompt.puts("Audit saved to #{audit_path}", opts)

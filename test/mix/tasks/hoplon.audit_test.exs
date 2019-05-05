@@ -10,6 +10,7 @@ defmodule Mix.Tasks.Hoplon.AuditTest do
 
   use ExUnit.Case, async: false
   @moduletag timeout: 10_000
+  @moduletag :audit
 
   @password "1337_P455wort"
   @comment "no comments!"
