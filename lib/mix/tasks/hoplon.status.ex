@@ -99,6 +99,7 @@ defmodule Mix.Tasks.Hoplon.Status do
     Enum.any?(audits, fn audit -> Data.audit(audit, :verdict) in [:safe, :lgtm] end)
   end
 
+  # NOTE this is used in hoplon.fetch, edit with caution
   @spec get_trusted_public_keys(env_path :: String.t(), %{}, include_self? :: boolean) :: %{
           optional(String.t()) => tuple
         }

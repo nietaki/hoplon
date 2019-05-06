@@ -89,7 +89,6 @@ defmodule Mix.Tasks.Hoplon.Audit do
     public_key = Crypto.build_public_key(private_key)
     fingerprint = Crypto.get_fingerprint(public_key)
 
-    # TODO summary table maybe?
     package =
       Data.package(
         name: package_name,
@@ -119,7 +118,6 @@ defmodule Mix.Tasks.Hoplon.Audit do
     audit_path = Tools.audit_path(env_path, package_name, package_hash, fingerprint)
     Prompt.puts("Audit saved to #{audit_path}", opts)
 
-    # TODO upload? Y/n
     # TODO configurable api client for tests
 
     # uploading audit
