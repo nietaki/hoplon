@@ -48,4 +48,8 @@ defmodule Hoplon.ApiClient do
 
     base <> suffix
   end
+
+  def default_base_url() do
+    "https://hoplon-server.gigalixirapp.com"
+  end
 end

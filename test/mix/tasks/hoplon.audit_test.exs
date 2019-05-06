@@ -51,7 +51,8 @@ defmodule Mix.Tasks.Hoplon.AuditTest do
              _hoplon_dir,
              _hoplon_env,
              "You're about to audit package 'dialyxir', found in your mix.lock",
-             "Audit saved to " <> audit_path
+             "Audit saved to " <> audit_path,
+             "Audit uploaded to " <> _upload_base_url
            ] = output_lines
 
     sig_path = String.replace_suffix(audit_path, ".audit", ".sig")

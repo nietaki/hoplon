@@ -45,7 +45,7 @@ defmodule Mix.Tasks.Hoplon.Audit do
     mix_lock_path = Keyword.get(switches, :mix_lock_file)
     env_path = Tools.print_and_get_env_path(switches, opts)
     config_file_path = Tools.config_file_path(env_path)
-    _config = ConfigFile.read_or_create!(config_file_path)
+    config = ConfigFile.read_or_create!(config_file_path)
 
     packages =
       Hoplon.Utils.get_packages_from_mix_lock(mix_lock_path)
@@ -116,9 +116,11 @@ defmodule Mix.Tasks.Hoplon.Audit do
     signature = Crypto.get_signature(encoded_audit, private_key)
     {:ok, _} = create_audit_files(env_path, audit, encoded_audit, signature)
 
+    audit_path = Tools.audit_path(env_path, package_name, package_hash, fingerprint)
+    Prompt.puts("Audit saved to #{audit_path}", opts)
+
     # TODO upload? Y/n
     # TODO configurable api client for tests
-    # TODO url configurable in the environment
 
     # uploading audit
     audit_hex = Crypto.hex_encode!(encoded_audit)
@@ -131,12 +133,10 @@ defmodule Mix.Tasks.Hoplon.Audit do
       public_key_pem: public_key_pem
     }
 
-    base = "https://hoplon-server.gigalixirapp.com"
-
+    base = Map.get(config, :api_base_url, Hoplon.ApiClient.default_base_url())
     {:ok, {200, _headers, _body}} = Hoplon.ApiClient.post(base, "audits/upload", [], params)
 
-    audit_path = Tools.audit_path(env_path, package_name, package_hash, fingerprint)
-    Prompt.puts("Audit saved to #{audit_path}", opts)
+    Prompt.puts("Audit uploaded to #{base}", opts)
   end
 
   def create_audit_files(env_path, audit, encoded_audit, signature) do
