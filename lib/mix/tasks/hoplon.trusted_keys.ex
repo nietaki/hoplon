@@ -11,8 +11,40 @@ defmodule Mix.Tasks.Hoplon.TrustedKeys do
 
   @shortdoc "utilities for managing the keys you trust"
 
+  @option_docs [
+    "`--nickname` / `-n` - give the trusted key a nickname"
+  ]
+
   @moduledoc """
+  Utilities for managing trusted keys.
+
+  ## Actions
+
+  ### add
+
+  Adds a `.pem` file to the collection of trusted keys. A nickname can be specified for it
+
+  Example:
+
+      mix hoplon.trusted_keys add path/to/some_public_key.pem --nickname Steve
+
+  ### remove
+
+  Removes an existing key from the collection of trusted keys.
+
+  The argument can be either the key's fingerprint or the nickname you gave it
+
+  Example:
+
+      mix hoplon.trusted_keys remove Steve
+      mix hoplon.trusted_keys remove 367b857bec55185e81b5ec618ee06060684ef66ee400a94feac1b6c2c28d08b0
+
+  ### list
+
+  Lists all trusted keys, with their nicknames.
   """
+
+  @moduledoc GenericTask.generate_moduledoc(@moduledoc, @option_docs)
 
   @impl Mix.Task
   def run(argv, opts \\ []) do
@@ -23,6 +55,8 @@ defmodule Mix.Tasks.Hoplon.TrustedKeys do
   # TODO show and download
   def valid_actions(), do: ~w(add remove list)
 
+  # Option:
+  # option, aliases
   @impl GenericTask
   def option_parser_config() do
     [

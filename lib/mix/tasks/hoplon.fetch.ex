@@ -14,8 +14,22 @@ defmodule Mix.Tasks.Hoplon.Fetch do
 
   @shortdoc "fetch audits from the trusted keys from the server"
 
+  @option_docs [
+    "`--mix-lock-file` - uses a different lockfile than the main one for the project to look for used packages"
+  ]
+
   @moduledoc """
+  Fetches audits for the used packages, from the chosen server.
+
+  Only fetches audits linked and signed by one of your trusted keys.
+
+  ## Example
+
+      mix hoplon.fetch
+
   """
+
+  @moduledoc GenericTask.generate_moduledoc(@moduledoc, @option_docs)
 
   @impl Mix.Task
   def run(argv, opts \\ []) do

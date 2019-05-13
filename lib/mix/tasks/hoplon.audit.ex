@@ -14,7 +14,17 @@ defmodule Mix.Tasks.Hoplon.Audit do
   @shortdoc "Create (and upload) a new package audit"
 
   @moduledoc """
+  Lets you create and upload an audit for a given package. Running the task will
+  start an interactive tool that will allow you to specify the verdict, comment and
+  other options
+
+  ## Example
+
+      mix hoplon.audit jason
+
   """
+
+  @moduledoc GenericTask.generate_moduledoc(@moduledoc, [])
 
   @impl Mix.Task
   def run(argv, opts \\ []) do

@@ -43,6 +43,30 @@ defmodule Hoplon.CLI.GenericTask do
     end
   end
 
+  @default_options [
+    "`--hoplon-dir` - path of directory to use for hoplon files use, defaults to `~/.hoplon/`",
+    "`--hoplon-env` - name of the hoplon environment to use, defaults to `default`"
+  ]
+
+  @spec generate_moduledoc(String.t(), list(), include_default_options :: boolean) :: String.t()
+  def generate_moduledoc(main_docs, option_docs, include_default_options \\ true) do
+    option_docs = Enum.sort(option_docs)
+
+    all_options =
+      if include_default_options do
+        option_docs ++ @default_options
+      else
+        option_docs
+      end
+
+    option_docs =
+      all_options
+      |> Enum.map(fn option -> "  * #{option}" end)
+      |> Enum.join("\n")
+
+    main_docs <> "\n\n## Command line options\n\n" <> option_docs <> "\n"
+  end
+
   defp check_action!(module, first_arg) do
     case {module.valid_actions(), first_arg} do
       {none, _} when none in [nil, []] ->

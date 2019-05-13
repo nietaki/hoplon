@@ -11,7 +11,23 @@ defmodule Mix.Tasks.Hoplon.MyKey do
   @shortdoc "utilities for managing your private/public keypair"
 
   @moduledoc """
+  Utilities for managing your public/private key pair
+
+  ## Actions
+
+  ### generate
+
+  Generates your new public/private key pair. Will overwrite the current
+  keypair, if one exists.
+
+  The interactive tool will ask you for a password to protect the
+  private key with.
+
+      mix hoplon.my_key generate
+
   """
+
+  @moduledoc GenericTask.generate_moduledoc(@moduledoc, [])
 
   @impl Mix.Task
   def run(argv, opts \\ []) do

@@ -58,7 +58,7 @@ defmodule Hoplon.CLI.Tools do
   end
 
   def audit_dir(env_path, package_name, package_hash) do
-    Path.join([env_path, package_name, package_hash])
+    Path.join([env_path, "audits", package_name, package_hash])
   end
 
   def get_peer_key_path(env_path, key_fingerprint) do

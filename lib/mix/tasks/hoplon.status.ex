@@ -16,8 +16,18 @@ defmodule Mix.Tasks.Hoplon.Status do
 
   @shortdoc "See the audit status of packages used in the project"
 
+  @option_docs [
+    "`--mix-lock-file` - uses a different lockfile than the main one for the project to look for used packages"
+  ]
+
   @moduledoc """
+  Prints the audit status of all packages used by the project (or listed in the `mix.lock` file)
+
+  If all have sufficient audits, the tasks succeeds with a `0` exit code, otherwise
+  fails with a non-`0` code.
   """
+
+  @moduledoc GenericTask.generate_moduledoc(@moduledoc, @option_docs)
 
   @impl Mix.Task
   def run(argv, opts \\ []) do
