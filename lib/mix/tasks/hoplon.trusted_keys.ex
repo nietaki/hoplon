@@ -28,6 +28,14 @@ defmodule Mix.Tasks.Hoplon.TrustedKeys do
 
       mix hoplon.trusted_keys add path/to/some_public_key.pem --nickname Steve
 
+  ### fetch
+
+  Fetches a key from the server by its fingerprint and adds it to the trusted keys
+
+  Example:
+
+      mix hoplon.trusted_keys fetch 5acffb8141071106126a09e10ab4347f6779ddefd3aec693c97c93cff77fcff0 --nickname Alice
+
   ### remove
 
   Removes an existing key from the collection of trusted keys.
@@ -53,7 +61,7 @@ defmodule Mix.Tasks.Hoplon.TrustedKeys do
 
   @impl GenericTask
   # TODO show and download
-  def valid_actions(), do: ~w(add remove list)
+  def valid_actions(), do: ~w(add remove list fetch)
 
   # Option:
   # option, aliases
@@ -110,6 +118,30 @@ defmodule Mix.Tasks.Hoplon.TrustedKeys do
     end
   end
 
+  def do_task(switches, ["fetch", fingerprint] = _args, opts) do
+    env_path = Tools.print_and_get_env_path(switches, opts)
+    config_file_path = Tools.config_file_path(env_path)
+    config = ConfigFile.read_or_create!(config_file_path)
+
+    with Prompt.puts("Fetching the public key with the fingerprint of #{fingerprint}...", opts),
+         {:ok, public_key_pem} <- fetch_key_from_server(config, fingerprint),
+         Prompt.puts("Decoding from PEM format...", opts),
+         # TODO: don't even add it to the peer keys before we double-check the fingerprint
+         {:ok, decoded_fingerprint} <- add_pem_to_peer_keys(env_path, public_key_pem),
+         :ok <-
+           if(decoded_fingerprint == fingerprint, do: :ok, else: {:error, :fingerprint_mismatch}),
+         Prompt.puts("Decoded, fingerprints match", opts),
+         maybe_nickname = Keyword.get(switches, :nickname),
+         {:ok, _} <- add_trusted_key_fingerprint_to_config(env_path, fingerprint, maybe_nickname) do
+      config_file_path = Tools.config_file_path(env_path)
+      Prompt.puts("Trusted key added to #{config_file_path}", opts)
+      :ok
+    else
+      {:error, reason} ->
+        Mix.raise(inspect(reason))
+    end
+  end
+
   def do_task(switches, ["remove", fingerprint_or_name] = _args, opts) do
     env_path = Tools.print_and_get_env_path(switches, opts)
     config_file_path = Tools.config_file_path(env_path)
@@ -135,6 +167,18 @@ defmodule Mix.Tasks.Hoplon.TrustedKeys do
     end
 
     :ok
+  end
+
+  defp fetch_key_from_server(config, fingerprint) do
+    base = Map.get(config, :api_base_url, Hoplon.ApiClient.default_base_url())
+
+    case Hoplon.ApiClient.post(base, "keys/fetch/#{fingerprint}", [], %{}) do
+      {:ok, {200, _headers, %{"pem" => pem}}} ->
+        {:ok, pem}
+
+      {:ok, {404, _, _}} ->
+        {:error, :key_not_found}
+    end
   end
 
   # TODO list next, to get the infrastructure for getting out the trusted keys
