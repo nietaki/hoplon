@@ -90,7 +90,7 @@ defmodule Mix.Tasks.Hoplon.Audit do
       Prompt.for_string("Comment for the audit", opts)
       |> empty_string_to_nil()
 
-    password = Prompt.for_password("Enter password to unlock #{private_key_path}", opts)
+    password = Prompt.for_password("Enter password to unlock private key", opts)
 
     private_key =
       Crypto.decode_private_key_from_pem(pem_contents, password)
