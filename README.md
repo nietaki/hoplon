@@ -1,11 +1,15 @@
 # ![Hoplon](assets/hoplon_text_200.png)
 
-Hoplon is a package that helps you verify that the code in your project's dependencies
-contains exactly what's on their GitHub and no other malicious code.
+~~Hoplon is a package that helps you verify that the code in your project's dependencies
+contains exactly what's on their GitHub and no other malicious code.~~
 
-Check out [nietaki/suffixer](https://github.com/nietaki/suffixer) to see how it works in practice.
+Hoplon is a set of tools to create and share signed "audits" describing the
+security status of hexpm (or other) packages. It allows you to maintain
+a collection of "trusted keys" - people whose audits you can fetch and take into
+account when assessing packages you (want to) use.
 
-**NOTE**: Hoplon is still in early stage of development and might not be stable enough for your needs.
+See CodeBEAM STO [presentation slides](https://slides.com/nietaki/trust-issues/) for details.
+Video of the talk coming soon.
 
 [![travis badge](https://travis-ci.org/nietaki/hoplon.svg?branch=master)](https://travis-ci.org/nietaki/hoplon)
 [![Hex.pm](https://img.shields.io/hexpm/v/hoplon.svg)](https://hex.pm/packages/hoplon)
@@ -14,41 +18,20 @@ Check out [nietaki/suffixer](https://github.com/nietaki/suffixer) to see how it 
 
 ## Usage
 
-To use Hoplon, add it as a dependency in your project.
+There is no current version of hoplon on hex.pm, you need to get it from github:
 
-Once it's in your deps, you can run `$ mix hoplon.check` to see if any of
-the dependencies pulled into your project contain code that differs from
-the code on their GitHub.
+    defp deps do
+      [
+        {:hoplon, github: "nietaki/hoplon"},
+      ]
+    end
+     
+After you add it to your dependencies, you gain access to the relevant hoplon tasks.
+The currently relevant hoplon tasks are `mix hoplon.fetch`, `mix hoplon.my_key`,
+`mix hoplon.status` and `mix hoplon.trusted_keys`
 
-To see the diff for a specific package, run `$ mix hoplon.diff <package name>`.
+All of those mix tasks come with documentation:
 
-Both of these mix tasks will exit with a non-zero code if any problems are
-found - the dependencies differ from their github repository, the github
-repository itself could not be found or the right commit could not be
-identified by Hoplon.
+    mix help hoplon.trusted_keys
 
-## Installation
 
-The package can be installed by adding `hoplon` to your list of
-dependencies in `mix.exs`:
-
-```elixir
-def deps do
-  [
-    {:hoplon, ">= 0.3.0", app: false, runtime: false, optional: true}
-  ]
-end
-```
-
-In order for Hoplon to work correctly, you'll need `git` and `diff` programs in
-your `PATH`.
-
-## FAQ
-
-### How do I know Hoplon is not malicious itself?
-
-TODO (deps options and maybe other ways)
-
-### How does it work?
-
-TODO (conventions, heuristics, `git` and `diff`)
